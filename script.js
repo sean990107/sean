@@ -1,35 +1,192 @@
-// 全局变量和常量
-let timelineData = JSON.parse(localStorage.getItem('timelineData') || '[]');
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_FILES = 5;
+// 获取数据库引用
+const db = firebase.database();
 
-// 添加图片压缩函数
-function compressImage(base64String, maxWidth = 800) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.src = base64String;
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            
-            // 计算缩放比例
-            if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // 压缩图片质量
-            resolve(canvas.toDataURL('image/jpeg', 0.6));
-        };
+// 全局变量和常量
+let timelineData = [];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILES = 9; // 最多9张图片
+
+// 数据加载函数
+function loadPosts() {
+    const postsRef = db.ref('posts');
+    postsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            timelineData = Object.values(data).sort((a, b) => b.id - a.id);
+            renderTimeline();
+        }
     });
 }
+
+// 图片压缩函数
+async function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // 设置最大尺寸
+                const maxSize = 800;
+                if (width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                }
+                if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // 压缩图片质量
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                resolve(compressedDataUrl);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// 表单提交函数
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    const loadingEl = document.getElementById('loading');
+    loadingEl.style.display = 'block';
+
+    try {
+        const content = document.getElementById('content').value.trim();
+        const userSelect = document.getElementById('user');
+        const selectedUser = userSelect.value;
+
+        if (!content) {
+            throw new Error('请输入内容');
+        }
+
+        const imageInput = document.getElementById('image');
+        const files = Array.from(imageInput.files);
+        const mediaItems = [];
+
+        for (const file of files) {
+            if (file.size > MAX_FILE_SIZE) {
+                throw new Error(`文件 ${file.name} 超过5MB限制`);
+            }
+
+            const compressedImage = await compressImage(file);
+            mediaItems.push({
+                type: 'image',
+                url: compressedImage
+            });
+        }
+
+        const newPost = {
+            id: Date.now(),
+            user: selectedUser,
+            date: new Date().toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            content: content,
+            media: mediaItems
+        };
+
+        // 保存到 Firebase
+        await db.ref('posts').push(newPost);
+        
+        // 更新本地数据
+        timelineData.unshift(newPost);
+        renderTimeline();
+
+        // 重置表单
+        const form = document.getElementById('post-form');
+        form.reset();
+        document.getElementById('preview-container').innerHTML = '';
+
+        showMessage('发布成功！');
+
+    } catch (error) {
+        showMessage(error.message, 'error');
+    } finally {
+        loadingEl.style.display = 'none';
+    }
+}
+
+// 渲染时间线
+function renderTimeline() {
+    const timeline = document.querySelector('.timeline');
+    timeline.innerHTML = '';
+    
+    timelineData.forEach((post, index) => {
+        const positionClass = index % 2 === 0 ? 'left' : 'right';
+        
+        const mediaHTML = post.media && post.media.length > 0 
+            ? `<div class="timeline-media">
+                ${post.media.map(item => `
+                    <img src="${item.url}" alt="上传图片" onclick="showImagePreview(this)">
+                `).join('')}
+               </div>`
+            : '';
+
+        const postHTML = `
+            <div class="timeline-item ${positionClass}">
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <div class="timeline-user">${post.user}</div>
+                        <div class="timeline-date">${post.date}</div>
+                        <button class="delete-btn" onclick="deletePost(${post.id})">×</button>
+                    </div>
+                    <div class="timeline-text">${post.content}</div>
+                    ${mediaHTML}
+                </div>
+            </div>
+        `;
+        
+        timeline.insertAdjacentHTML('beforeend', postHTML);
+    });
+}
+
+// 删除帖子
+function deletePost(postId) {
+    if (confirm('确定要删除这条内容吗？')) {
+        db.ref('posts').orderByChild('id').equalTo(postId).once('value', snapshot => {
+            snapshot.forEach(childSnapshot => {
+                childSnapshot.ref.remove()
+                    .then(() => {
+                        timelineData = timelineData.filter(post => post.id !== postId);
+                        renderTimeline();
+                        showMessage('删除成功');
+                    })
+                    .catch(error => showMessage('删除失败: ' + error.message, 'error'));
+            });
+        });
+    }
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', () => {
+    loadPosts();
+
+    const imageInput = document.getElementById('image');
+    if (imageInput) {
+        imageInput.addEventListener('change', handleFileSelect);
+    }
+
+    const form = document.getElementById('post-form');
+    if (form) {
+        form.addEventListener('submit', handleFormSubmit);
+    }
+});
 
 // 图片预览处理
 async function handleFileSelect(event) {
@@ -54,12 +211,10 @@ async function handleFileSelect(event) {
             continue;
         }
 
-        // 创建预览
-        const reader = new FileReader();
-        reader.onload = async function(e) {
+        try {
             // 压缩预览图片
-            const compressedPreview = await compressImage(e.target.result, 200); // 预览图片压缩到更小
-
+            const compressedPreview = await compressImage(file);
+            
             const previewDiv = document.createElement('div');
             previewDiv.className = 'preview-item';
             previewDiv.innerHTML = `
@@ -74,116 +229,10 @@ async function handleFileSelect(event) {
                     event.target.value = '';
                 }
             });
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// 表单提交处理
-async function handleFormSubmit(event) {
-    event.preventDefault();
-    
-    const loadingEl = document.getElementById('loading');
-    loadingEl.style.display = 'block';
-
-    try {
-        const content = document.getElementById('content').value.trim();
-        const userSelect = document.getElementById('user');
-        const selectedUser = userSelect.value;
-
-        if (!content) {
-            throw new Error('请输入内容');
+        } catch (error) {
+            console.error('预览生成失败:', error);
+            showMessage(`预览生成失败: ${file.name}`);
         }
-
-        const imageInput = document.getElementById('image');
-        const files = Array.from(imageInput.files);
-        const mediaItems = [];
-
-        // 处理每个文件
-        for (const file of files) {
-            if (file.size > MAX_FILE_SIZE) {
-                throw new Error(`文件 ${file.name} 超过5MB限制`);
-            }
-
-            // 读取并压缩图片
-            const base64 = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = e => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
-
-            // 压缩图片
-            const compressedImage = await compressImage(base64);
-            
-            mediaItems.push({
-                type: 'image',
-                url: compressedImage
-            });
-        }
-
-        const newPost = {
-            id: Date.now(),
-            user: selectedUser,
-            date: new Date().toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }),
-            content: content,
-            media: mediaItems
-        };
-
-        // 尝试存储数据
-        try {
-            // 检查存储空间
-            const currentData = JSON.parse(localStorage.getItem('timelineData') || '[]');
-            
-            // 如果数据太多，删除旧的数据
-            while (currentData.length > 50) {
-                currentData.pop();
-            }
-            
-            // 添加新数据
-            currentData.unshift(newPost);
-            
-            // 尝试存储
-            const dataString = JSON.stringify(currentData);
-            try {
-                localStorage.setItem('timelineData', dataString);
-                timelineData = currentData;
-            } catch (e) {
-                // 如果还是失败，继续删除旧数据直到能存储为止
-                while (currentData.length > 1) {
-                    currentData.pop();
-                    try {
-                        localStorage.setItem('timelineData', JSON.stringify(currentData));
-                        timelineData = currentData;
-                        break;
-                    } catch (err) {
-                        continue;
-                    }
-                }
-            }
-        } catch (storageError) {
-            throw new Error('存储空间不足，请删除一些旧的内容');
-        }
-
-        // 重新渲染
-        renderTimeline();
-
-        // 重置表单
-        const form = document.getElementById('post-form');
-        form.reset();
-        document.getElementById('preview-container').innerHTML = '';
-
-        showMessage('发布成功！');
-
-    } catch (error) {
-        showMessage(error.message, 'error');
-    } finally {
-        loadingEl.style.display = 'none';
     }
 }
 
@@ -285,40 +334,6 @@ function showImagePreview(imgElement, event) {
     document.addEventListener('keydown', handleEsc);
 }
 
-// 修改渲染时间线中的图片点击事件
-function renderTimeline() {
-    const timeline = document.querySelector('.timeline');
-    timeline.innerHTML = '';
-    
-    timelineData.forEach((post, index) => {
-        const positionClass = index % 2 === 0 ? 'left' : 'right';
-        
-        const mediaHTML = post.media && post.media.length > 0 
-            ? `<div class="timeline-media">
-                ${post.media.map(item => `
-                    <img src="${item.url}" alt="上传图片" onclick="showImagePreview(this, event)">
-                `).join('')}
-               </div>`
-            : '';
-
-        const postHTML = `
-            <div class="timeline-item ${positionClass}">
-                <div class="timeline-content">
-                    <div class="timeline-header">
-                        <div class="timeline-user">${post.user}</div>
-                        <div class="timeline-date">${post.date}</div>
-                        <button class="delete-btn" onclick="deletePost(${index})">×</button>
-                    </div>
-                    <div class="timeline-text">${post.content}</div>
-                    ${mediaHTML}
-                </div>
-            </div>
-        `;
-        
-        timeline.insertAdjacentHTML('beforeend', postHTML);
-    });
-}
-
 // 显示消息提示
 function showMessage(message, type = 'success') {
     const messageEl = document.createElement('div');
@@ -328,31 +343,3 @@ function showMessage(message, type = 'success') {
     
     setTimeout(() => messageEl.remove(), 3000);
 }
-
-// 删除帖子
-function deletePost(index) {
-    if (confirm('确定要删除这条内容吗？')) {
-        timelineData.splice(index, 1);
-        localStorage.setItem('timelineData', JSON.stringify(timelineData));
-        renderTimeline();
-        showMessage('删除成功');
-    }
-}
-
-// 初始化事件监听
-document.addEventListener('DOMContentLoaded', () => {
-    // 渲染现有内容
-    renderTimeline();
-
-    // 添加文件选择监听
-    const imageInput = document.getElementById('image');
-    if (imageInput) {
-        imageInput.addEventListener('change', handleFileSelect);
-    }
-
-    // 添加表单提交监听
-    const form = document.getElementById('post-form');
-    if (form) {
-        form.addEventListener('submit', handleFormSubmit);
-    }
-});

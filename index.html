@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="记录我们的故事 - 一个分享美好回忆的地方">
     <title>我们的故事</title>
     <link rel="stylesheet" href="style.css">
@@ -54,6 +54,24 @@
         </section>
     </main>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script>
+    // Firebase 配置
+    const firebaseConfig = {
+        apiKey: "AIzaSyDlP83YdTLp5szvUlElWeG_6tNWNx00_YU",
+        authDomain: "sjl-and-csh.firebaseapp.com",
+        projectId: "sjl-and-csh",
+        storageBucket: "sjl-and-csh.firebasestorage.app",
+        messagingSenderId: "623953756480",
+        appId: "1:623953756480:web:70da1d43bd540347d67aa5",
+        measurementId: "G-EW0NKQJGRZ",
+        databaseURL: "https://sjl-and-csh-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
