@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="记录我们的故事 - 一个分享美好回忆的地方">
+    <title>我们的故事</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 加载提示 -->
+    <div id="loading" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <span>加载中...</span>
+    </div>
+
+    <!-- 页面头部 -->
+    <header class="page-header">
+        <div class="container">
+            <h1>欢迎来到孙佳乐的小窝</h1>
+            <p>记录每一个美好瞬间</p>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="container">
+        <!-- 发布表单 -->
+        <section class="post-form">
+            <h2>分享你的故事</h2>
+            <form id="post-form">
+                <div class="form-group">
+                    <label for="user">发布者</label>
+                    <select id="user" required>
+                        <option value="孙佳乐">孙佳乐</option>
+                        <option value="晁森豪">晁森豪</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="content">内容</label>
+                    <textarea id="content" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="image">图片（可选，最多5张）</label>
+                    <input type="file" id="image" accept="image/*" multiple>
+                    <div id="preview-container" class="preview-container"></div>
+                </div>
+                <button type="submit">发布</button>
+            </form>
+        </section>
+
+        <!-- 时间线容器 -->
+        <section class="timeline">
+            <!-- 时间线内容将通过JavaScript动态生成 -->
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

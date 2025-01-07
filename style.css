@@ -1,0 +1,267 @@
+:root {
+  --primary-color: #8a2be2;
+  --secondary-color: #f8f0ff;
+  --text-color: #000000;
+  --timeline-text-color: #1e90ff;
+  --border-color: #e6d6ff;
+  --shadow: 0 1px 2px rgba(138,43,226,0.1);
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+  background-color: white;
+  line-height: 1.6;
+}
+
+/* 页面标题 */
+.page-header {
+  text-align: center;
+  padding: 6rem 0;
+  background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%);
+  margin-bottom: 3rem;
+  color: white;
+}
+
+.page-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.page-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+/* 时间线 */
+.timeline {
+  position: relative;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 20px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary-color);
+  left: 50%;
+  margin-left: -2px;
+}
+
+.timeline-item {
+  position: relative;
+  width: 45%;
+  margin-bottom: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-user {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.timeline-date {
+  font-size: 0.9em;
+  color: #666;
+  margin-right: 0.5rem;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #ff4444;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  transition: color 0.2s;
+}
+
+.delete-btn:hover {
+  color: #cc0000;
+}
+
+.timeline-item p {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.8;
+  color: var(--timeline-text-color);
+}
+
+.timeline-item.left {
+  left: 0;
+}
+
+.timeline-item.right {
+  left: 55%;
+}
+
+.timeline-item::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  right: -12px;
+  background-color: white;
+  border: 4px solid var(--primary-color);
+  top: 20px;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.timeline-item.right::after {
+  left: -12px;
+}
+
+/* 图片样式 */
+.timeline-media {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.timeline-media img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.timeline-media img:hover {
+  transform: scale(1.05);
+}
+
+.timeline-media.expanded {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.timeline-media.expanded img {
+  height: auto;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+/* 发布表单样式 */
+.post-form {
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  background: var(--secondary-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(138,43,226,0.05);
+}
+
+.post-form textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 1.2rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 1.1rem;
+  color: var(--text-color);
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.post-form textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.post-form input[type="file"] {
+  margin: 1rem 0;
+}
+
+.post-form button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.post-form button:hover {
+  background-color: #7b1fa2;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .timeline::before {
+    left: 20px;
+  }
+
+  .timeline-item {
+    width: auto;
+    left: 0 !important;
+    margin-left: 40px;
+  }
+
+  .timeline-item::after {
+    left: 8px;
+  }
+}
+
+/* 预览容器样式 */
+.preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 1rem;
+    max-width: 100%;
+}
+
+.preview-item {
+    position: relative;
+    width: 100px;  /* 固定宽度 */
+    height: 100px; /* 固定高度 */
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 保持图片比例并填充容器 */
+}
+
+.remove-preview {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
