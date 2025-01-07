@@ -1,76 +1,81 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="记录我们的故事 - 一个分享美好回忆的地方">
-    <title>我们的故事</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孙佳乐的小窝</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- 加载提示 -->
-    <div id="loading" class="loading-spinner" style="display: none;">
-        <div class="spinner"></div>
-        <span>加载中...</span>
-    </div>
+    <div class="container">
+        <header class="page-header">
+            <div class="title-wrapper">
+                <h1 class="main-title">✨ 孙佳乐的小窝 🏡</h1>
+                <p class="subtitle">🌟 记录生活中的每一个瞬间 💫</p>
+            </div>
+        </header>
 
-    <!-- 页面头部 -->
-    <header class="page-header">
-        <div class="container">
-            <h1>欢迎来到孙佳乐的小窝</h1>
-            <p>记录每一个美好瞬间</p>
-        </div>
-    </header>
-
-    <!-- 主要内容 -->
-    <main class="container">
-        <!-- 发布表单 -->
-        <section class="post-form">
-            <h2>分享你的故事</h2>
-            <form id="post-form">
+        <div class="post-form-card">
+            <form id="post-form" class="post-form">
                 <div class="form-group">
-                    <label for="user">发布者</label>
-                    <select id="user" required>
-                        <option value="孙佳乐">孙佳乐</option>
-                        <option value="晁森豪">晁森豪</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="content">内容</label>
+                    <label for="content">
+                        <i class="fas fa-pen"></i>
+                        写下此刻的心情 ✍️
+                    </label>
                     <textarea id="content" required></textarea>
                 </div>
+                
                 <div class="form-group">
-                    <label for="image">图片（可选，最多5张）</label>
-                    <input type="file" id="image" accept="image/*" multiple>
-                    <div id="preview-container" class="preview-container"></div>
+                    <label for="user">
+                        <i class="fas fa-user"></i>
+                        选择用户 👤
+                    </label>
+                    <select id="user" required>
+                        <option value="晁森豪">晁森豪 🤴</option>
+                        <option value="孙佳乐">孙佳乐 👸</option>
+                    </select>
                 </div>
-                <button type="submit">发布</button>
+
+                <div class="form-group">
+                    <label for="image">
+                        <i class="fas fa-image"></i>
+                        添加图片 📸
+                    </label>
+                    <input type="file" id="image" accept="image/*" multiple>
+                </div>
+
+                <div id="preview-container" class="preview-container"></div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    发布 🚀
+                </button>
             </form>
-        </section>
+            <div id="loading" class="loading">发布中...</div>
+        </div>
 
-        <!-- 时间线容器 -->
-        <section class="timeline">
-            <!-- 时间线内容将通过JavaScript动态生成 -->
-        </section>
-    </main>
+        <div class="timeline-wrapper">
+            <div class="timeline"></div>
+        </div>
+    </div>
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
     <script>
-    // Firebase 配置
-    const firebaseConfig = {
-        apiKey: "AIzaSyDlP83YdTLp5szvUlElWeG_6tNWNx00_YU",
-        authDomain: "sjl-and-csh.firebaseapp.com",
-        projectId: "sjl-and-csh",
-        storageBucket: "sjl-and-csh.firebasestorage.app",
-        messagingSenderId: "623953756480",
-        appId: "1:623953756480:web:70da1d43bd540347d67aa5",
-        measurementId: "G-EW0NKQJGRZ",
-        databaseURL: "https://sjl-and-csh-default-rtdb.asia-southeast1.firebasedatabase.app"
-    };
-
-    // 初始化 Firebase
-    firebase.initializeApp(firebaseConfig);
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlP83YdTLp5szvUlElWeG_6tNWNx00_YU",
+            authDomain: "sjl-and-csh.firebaseapp.com",
+            projectId: "sjl-and-csh",
+            storageBucket: "sjl-and-csh.appspot.com",
+            messagingSenderId: "623953756480",
+            appId: "1:623953756480:web:70da1d43bd540347d67aa5",
+            measurementId: "G-EW0NKQJGRZ",
+            databaseURL: "https://sjl-and-csh-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+        firebase.initializeApp(firebaseConfig);
     </script>
     <script src="script.js"></script>
 </body>
