@@ -723,16 +723,35 @@ body {
 
 /* 移动端适配 */
 @media screen and (max-width: 768px) {
-    /* 扩大显示区域 */
+    /* 容器居中 */
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* 主要内容区域 */
+    .container {
+        width: 92%;  /* 控制内容区域宽度 */
+        max-width: 92%;
+        margin: 0 auto;  /* 水平居中 */
+    }
+
+    /* 三个主模块样式 */
     .title-wrapper,
     .post-form-card,
     .timeline-wrapper {
-        padding: 15px;  /* 减小内边距 */
-        margin: 15px 10px;  /* 减小外边距 */
-        width: calc(100% - 20px);  /* 扩大宽度 */
+        width: 100%;  /* 使用容器的全宽 */
+        margin: 15px 0;  /* 只保留上下边距 */
+        padding: 15px;
+        box-sizing: border-box;
     }
 
-    /* 调整双框间距 */
+    /* 双框效果调整 */
     .title-wrapper::before,
     .post-form-card::before,
     .timeline-wrapper::before {
@@ -742,25 +761,36 @@ body {
         bottom: -5px;
     }
 
-    /* 调整字体大小 */
+    /* 发布记录头部布局 */
     .timeline-header {
-        font-size: 14px;  /* 减小标题字体 */
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        flex-wrap: nowrap;  /* 防止换行 */
+        gap: 10px;
+        padding: 8px 0;
     }
 
     .timeline-user {
         font-size: 14px;
+        flex-shrink: 0;  /* 防止名字被压缩 */
     }
 
     .timeline-date {
         font-size: 12px;
+        color: #666;
+        flex-shrink: 0;  /* 防止日期被压缩 */
     }
 
-    /* 优化时间和用户信息布局 */
-    .timeline-item {
-        padding: 12px;  /* 减小内容区域内边距 */
+    /* 文本输入区域 */
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 按钮样式调整 */
+    .btn {
+        width: 100%;
+        margin: 10px 0;
     }
 }
 
