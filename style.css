@@ -720,3 +720,52 @@ body {
 .timeline-wrapper::before {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    /* 扩大显示区域 */
+    .title-wrapper,
+    .post-form-card,
+    .timeline-wrapper {
+        padding: 15px;  /* 减小内边距 */
+        margin: 15px 10px;  /* 减小外边距 */
+        width: calc(100% - 20px);  /* 扩大宽度 */
+    }
+
+    /* 调整双框间距 */
+    .title-wrapper::before,
+    .post-form-card::before,
+    .timeline-wrapper::before {
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+    }
+
+    /* 调整字体大小 */
+    .timeline-header {
+        font-size: 14px;  /* 减小标题字体 */
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;  /* 防止换行 */
+    }
+
+    .timeline-user {
+        font-size: 14px;
+    }
+
+    .timeline-date {
+        font-size: 12px;
+    }
+
+    /* 优化时间和用户信息布局 */
+    .timeline-item {
+        padding: 12px;  /* 减小内容区域内边距 */
+    }
+}
+
+/* 确保内容不会溢出 */
+.timeline-content {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
