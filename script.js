@@ -395,7 +395,14 @@ async function submitPost() {
         
         // 处理语音
         if (voicePreview && voicePreview.src && voicePreview.src.startsWith('data:audio')) {
-            post.voice = voicePreview.src;
+            try {
+                showMessage('正在处理语音...', 'info');
+                post.voice = voicePreview.src; // 直接存储 Base64 数据
+                console.log('语音数据已添加到帖子');
+            } catch (error) {
+                console.error('语音处理失败:', error);
+                showMessage('语音处理失败，但会继续发布文字内容 🎤', 'warning');
+            }
         }
 
         // 保存帖子到数据库
@@ -929,38 +936,31 @@ async function initVoiceRecording() {
 
                 mediaRecorder.onstop = async () => {
                     try {
+                        // 创建音频 Blob
                         const audioBlob = new Blob(audioChunks, { 
-                            type: mediaRecorder.mimeType
+                            type: 'audio/mpeg' // 使用更通用的格式
                         });
                         
-                        // 在微信中使用 FileReader
-                        if (/MicroMessenger/i.test(navigator.userAgent)) {
+                        // 转换为 Base64
+                        const base64Audio = await new Promise((resolve) => {
                             const reader = new FileReader();
-                            reader.onloadend = () => {
-                                voicePreview.src = reader.result;
-                                voicePreview.style.display = 'block';
-                                voicePreview.load();
-                            };
+                            reader.onloadend = () => resolve(reader.result);
                             reader.readAsDataURL(audioBlob);
-                        } else {
-                            // 其他环境使用 URL.createObjectURL
-                            const audioUrl = URL.createObjectURL(audioBlob);
-                            voicePreview.src = audioUrl;
-                            voicePreview.style.display = 'block';
-                            voicePreview.load();
-                        }
+                        });
 
-                        // 添加加载成功的处理
-                        voicePreview.onloadeddata = () => {
-                            console.log('音频加载成功');
-                            showMessage('录音完成 ✅', 'success');
-                        };
+                        // 预览音频
+                        voicePreview.src = base64Audio;
+                        voicePreview.style.display = 'block';
                         
-                        // 添加错误处理
-                        voicePreview.onerror = (e) => {
-                            console.error('音频加载失败:', e);
-                            showMessage('音频加载失败，请重试 🎤', 'error');
-                        };
+                        // 确保音频加载完成
+                        await new Promise((resolve, reject) => {
+                            voicePreview.onloadeddata = resolve;
+                            voicePreview.onerror = reject;
+                        });
+
+                        console.log('音频加载成功');
+                        showMessage('录音完成 ✅', 'success');
+                        
                     } catch (error) {
                         console.error('处理录音数据失败:', error);
                         showMessage('处理录音失败，请重试 🎤', 'error');
