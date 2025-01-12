@@ -378,17 +378,24 @@ async function submitPost() {
 
         // 处理图片上传
         if (imageFiles.length > 0) {
+            showMessage('正在上传图片...', 'info');
             const images = [];
             for (const file of imageFiles) {
-                const imageUrl = await uploadImage(file);
-                images.push(imageUrl);
+                try {
+                    const imageUrl = await uploadImage(file);
+                    images.push(imageUrl);
+                } catch (error) {
+                    console.error('图片上传失败:', error);
+                    showMessage('图片上传失败 😢', 'error');
+                    return;
+                }
             }
             post.images = images;
         }
         
         // 处理语音
         if (voicePreview && voicePreview.src && voicePreview.src.startsWith('data:audio')) {
-            post.voice = voicePreview.src; // 直接存储Base64编码的音频
+            post.voice = voicePreview.src;
         }
 
         // 保存帖子到数据库
@@ -892,16 +899,27 @@ async function initVoiceRecording() {
     recordBtn.addEventListener('click', async () => {
         if (!mediaRecorder) {
             try {
+                // 添加 Safari 浏览器的特殊处理
+                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+                if (isSafari) {
+                    showMessage('Safari浏览器需要在设置中允许使用麦克风 🎤\n设置 > Safari > 高级 > 网站设置 > 麦克风', 'warning');
+                }
+
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
                 // 检测设备类型并设置适当的音频格式
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                const mimeType = isIOS ? 'audio/mp4' : 'audio/webm';
                 
-                mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus',
-                    audioBitsPerSecond: 128000
-                });
+                try {
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus',
+                        audioBitsPerSecond: 128000
+                    });
+                } catch (e) {
+                    // 如果指定格式失败，尝试使用默认格式
+                    console.log('指定格式失败，使用默认格式');
+                    mediaRecorder = new MediaRecorder(stream);
+                }
                 
                 audioChunks = [];
 
@@ -909,24 +927,44 @@ async function initVoiceRecording() {
                     audioChunks.push(event.data);
                 };
 
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { 
-                        type: isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus'
-                    });
-                    
-                    // 使用 URL.createObjectURL 而不是 Base64
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    voicePreview.src = audioUrl;
-                    voicePreview.style.display = 'block';
-                    
-                    // 确保音频加载完成
-                    voicePreview.load();
-                    
-                    // 添加错误处理
-                    voicePreview.onerror = (e) => {
-                        console.error('音频加载失败:', e);
-                        showMessage('音频加载失败，请重试 🎤', 'error');
-                    };
+                mediaRecorder.onstop = async () => {
+                    try {
+                        const audioBlob = new Blob(audioChunks, { 
+                            type: mediaRecorder.mimeType
+                        });
+                        
+                        // 在微信中使用 FileReader
+                        if (/MicroMessenger/i.test(navigator.userAgent)) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                voicePreview.src = reader.result;
+                                voicePreview.style.display = 'block';
+                                voicePreview.load();
+                            };
+                            reader.readAsDataURL(audioBlob);
+                        } else {
+                            // 其他环境使用 URL.createObjectURL
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            voicePreview.src = audioUrl;
+                            voicePreview.style.display = 'block';
+                            voicePreview.load();
+                        }
+
+                        // 添加加载成功的处理
+                        voicePreview.onloadeddata = () => {
+                            console.log('音频加载成功');
+                            showMessage('录音完成 ✅', 'success');
+                        };
+                        
+                        // 添加错误处理
+                        voicePreview.onerror = (e) => {
+                            console.error('音频加载失败:', e);
+                            showMessage('音频加载失败，请重试 🎤', 'error');
+                        };
+                    } catch (error) {
+                        console.error('处理录音数据失败:', error);
+                        showMessage('处理录音失败，请重试 🎤', 'error');
+                    }
                 };
 
                 mediaRecorder.start();
@@ -1015,5 +1053,80 @@ async function uploadVoice(voiceBlob) {
     } catch (error) {
         console.error('语音上传过程出错:', error);
         throw error;
+    }
+}
+
+// 添加图片压缩函数
+async function compressImage(file) {
+    return new Promise((resolve, reject) => {
+        const maxWidth = 1200; // 最大宽度
+        const maxHeight = 1200; // 最大高度
+        const maxSizeMB = 1; // 最大文件大小（MB）
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+            
+            img.onload = function() {
+                let width = img.width;
+                let height = img.height;
+                
+                // 计算缩放比例
+                if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+                
+                // 创建 canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                // 绘制图片
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // 压缩图片
+                let quality = 0.8;
+                let base64 = canvas.toDataURL('image/jpeg', quality);
+                
+                // 如果大小仍然超过限制，继续压缩
+                while (base64.length > maxSizeMB * 1024 * 1024 && quality > 0.1) {
+                    quality -= 0.1;
+                    base64 = canvas.toDataURL('image/jpeg', quality);
+                }
+                
+                resolve(base64);
+            };
+            
+            img.onerror = reject;
+        };
+        reader.onerror = reject;
+    });
+}
+
+// 修改 uploadImage 函数
+async function uploadImage(file) {
+    try {
+        // 检查文件大小
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            showMessage('图片太大，正在压缩...', 'info');
+            const compressedImage = await compressImage(file);
+            return compressedImage;
+        }
+        
+        // 如果文件不需要压缩，直接转换为 base64
+        const reader = new FileReader();
+        return new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('图片读取失败'));
+            reader.readAsDataURL(file);
+        });
+    } catch (error) {
+        console.error('图片处理失败:', error);
+        throw new Error('图片处理失败');
     }
 }
