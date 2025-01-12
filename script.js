@@ -884,19 +884,25 @@ async function deleteNestedReply(nestedReplyId, parentReplyId, postId) {
 }
 
 // 初始化语音录制功能
-function initVoiceRecording() {
+async function initVoiceRecording() {
     const recordBtn = document.getElementById('recordVoiceBtn');
     const timer = document.querySelector('.voice-timer');
     const voicePreview = document.getElementById('voicePreview');
 
     recordBtn.addEventListener('click', async () => {
         if (!mediaRecorder) {
-            // 开始录音
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // 检测设备类型并设置适当的音频格式
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const mimeType = isIOS ? 'audio/mp4' : 'audio/webm';
+                
                 mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'audio/webm' // 使用更通用的格式
+                    mimeType: isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 128000
                 });
+                
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = (event) => {
@@ -905,17 +911,21 @@ function initVoiceRecording() {
 
                 mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { 
-                        type: 'audio/webm; codecs=opus' // 指定编解码器
+                        type: isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus'
                     });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob);
-                    reader.onloadend = () => {
-                        const base64Audio = reader.result;
-                        const voicePreview = document.getElementById('voicePreview');
-                        voicePreview.src = base64Audio;
-                        voicePreview.style.display = 'block';
-                        // 添加这行以确保音频加载完成
-                        voicePreview.load();
+                    
+                    // 使用 URL.createObjectURL 而不是 Base64
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    voicePreview.src = audioUrl;
+                    voicePreview.style.display = 'block';
+                    
+                    // 确保音频加载完成
+                    voicePreview.load();
+                    
+                    // 添加错误处理
+                    voicePreview.onerror = (e) => {
+                        console.error('音频加载失败:', e);
+                        showMessage('音频加载失败，请重试 🎤', 'error');
                     };
                 };
 
