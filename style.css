@@ -35,15 +35,17 @@ body {
     padding-top: 30px; /* 增加顶部间距 */
 }
 
+/* 模块容器样式 */
+.module-container {
+    margin-bottom: 60px; /* 模块之间的间距 */
+}
+
 /* 统一所有主要模块的基础样式 */
-.title-wrapper,
-.post-form-card,
-.filter-section,
 .module-wrapper {
     position: relative;
     width: 85% !important;
     max-width: 510px !important;
-    margin: 30px auto !important;
+    margin: 0 auto !important;
     padding: 20px !important;
     background: rgba(255, 255, 255, 0.9);
     border-radius: 20px;
@@ -52,42 +54,85 @@ body {
     box-sizing: border-box !important;
 }
 
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .module-container {
+        margin-bottom: 40px; /* 移动端模块间距稍小 */
+    }
+}
+
+/* 第一个模块需要顶部间距 */
+.container > *:first-child .module-wrapper {
+    margin-top: 30px !important;
+}
+
+/* 最后一个模块不需要底部间距 */
+.container > *:last-child .module-wrapper {
+    margin-bottom: 30px !important;
+}
+
 /* 统一所有模块的装饰外框 */
-.title-wrapper::before,
-.post-form-card::before,
-.filter-section::before,
 .module-wrapper::before {
     content: '';
     position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
     background: rgba(255, 255, 255, 0.85);
-    border-radius: 25px;
+    border-radius: 30px;
     z-index: -1;
     transition: all 0.3s ease;
     box-shadow: 0 15px 45px rgba(74, 59, 99, 0.1);
 }
 
-/* 统一所有模块的悬停效果 */
-.title-wrapper:hover,
-.post-form-card:hover,
-.filter-section:hover,
+/* 统一所有模块的悬停效果 - 整个模块一起动效 */
 .module-wrapper:hover {
-    transform: translateY(-5px);
+    transform: translateY(-5px); /* 添加整体模块的动效 */
     box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
 }
 
-.title-wrapper:hover::before,
-.post-form-card:hover::before,
-.filter-section:hover::before,
 .module-wrapper:hover::before {
-    top: -12px;
-    left: -12px;
-    right: -12px;
-    bottom: -12px;
+    top: -30px;
+    left: -30px;
+    right: -30px;
+    bottom: -30px;
     box-shadow: 0 20px 50px rgba(74, 59, 99, 0.15);
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .module-wrapper {
+        width: 95% !important;
+        padding: 15px !important;
+        margin-bottom: 40px !important; /* 移动端稍微减小间距 */
+    }
+
+    .container > *:first-child .module-wrapper {
+        margin-top: 20px !important;
+    }
+
+    .container > *:last-child .module-wrapper {
+        margin-bottom: 20px !important;
+    }
+
+    .module-wrapper::before {
+        top: -12px;
+        left: -12px;
+        right: -12px;
+        bottom: -12px;
+    }
+
+    .module-wrapper:hover {
+        transform: translateY(-3px); /* 移动端稍微减小动效幅度 */
+    }
+
+    .module-wrapper:hover::before {
+        top: -18px;
+        left: -18px;
+        right: -18px;
+        bottom: -18px;
+    }
 }
 
 /* 发布记录框样式统一 */
@@ -112,7 +157,7 @@ body {
     .module-wrapper {
         width: 95% !important;
         padding: 15px !important;
-        margin: 20px auto !important; /* 从 10px 增加到 20px */
+        margin: 40px auto !important; /* 增加到 40px */
     }
 
     .title-wrapper::before,
@@ -128,6 +173,20 @@ body {
     .timeline-item {
         width: 90% !important;
         padding: 15px !important;
+    }
+
+    .module-wrapper::before {
+        top: -12px;  /* 移动端稍微小一点 */
+        left: -12px;
+        right: -12px;
+        bottom: -12px;
+    }
+
+    .module-wrapper:hover::before {
+        top: -18px;
+        left: -18px;
+        right: -18px;
+        bottom: -18px;
     }
 }
 
