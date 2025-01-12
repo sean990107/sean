@@ -9,99 +9,109 @@
 </head>
 <body>
     <div class="container">
-        <header class="page-header">
-            <div class="title-wrapper">
+        <!-- 标题模块 -->
+        <div class="module-container">
+            <div class="module-wrapper">
                 <h1 class="main-title">✨ 孙佳乐的小窝 🏡</h1>
                 <p class="subtitle">🌟 记录生活中的每一个瞬间 💫</p>
             </div>
-        </header>
+        </div>
 
-        <div class="post-form-card">
-            <form id="post-form" class="post-form">
-                <div class="form-group">
-                    <label for="content">
-                        <i class="fas fa-pen"></i>
-                        写下此刻的心情 ✍️
-                    </label>
-                    <div class="content-controls">
-                        <textarea id="content" required></textarea>
-                        <div class="voice-controls">
-                            <button type="button" id="recordVoiceBtn" class="voice-btn">
-                                <i class="fas fa-microphone"></i> 录音 (最长30秒)
-                            </button>
-                            <div class="voice-timer" style="display: none;">00:00</div>
-                            <audio id="voicePreview" controls style="display: none;"></audio>
+        <!-- 发布表单模块 -->
+        <div class="module-container">
+            <div class="module-wrapper">
+                <form id="post-form" class="post-form">
+                    <div class="form-group">
+                        <label for="content">
+                            <i class="fas fa-pen"></i>
+                            写下此刻的心情 ✍️
+                        </label>
+                        <div class="content-controls">
+                            <textarea id="content" required></textarea>
+                            <div class="voice-controls">
+                                <button type="button" id="recordVoiceBtn" class="voice-btn">
+                                    <i class="fas fa-microphone"></i> 录音 (最长30秒)
+                                </button>
+                                <div class="voice-timer" style="display: none;">00:00</div>
+                                <audio id="voicePreview" controls style="display: none;"></audio>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="mood">
-                        <i class="fas fa-smile"></i>
-                        选择心情 😊
-                    </label>
-                    <select id="mood">
-                        <option value="">选择心情</option>
+                    
+                    <div class="form-group">
+                        <label for="mood">
+                            <i class="fas fa-smile"></i>
+                            选择心情 😊
+                        </label>
+                        <select id="mood">
+                            <option value="">选择心情</option>
+                            <option value="happy">😊 开心</option>
+                            <option value="sad">😢 难过</option>
+                            <option value="excited">🥳 激动</option>
+                            <option value="angry">😠 生气</option>
+                            <option value="love">❤️ 爱你</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user">
+                            <i class="fas fa-user"></i>
+                            选择用户 👤
+                        </label>
+                        <select id="user" required>
+                            <option value="晁森豪">晁森豪 🤴</option>
+                            <option value="孙佳乐">孙佳乐 👸</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image">
+                            <i class="fas fa-image"></i>
+                            添加图片 📸
+                        </label>
+                        <input type="file" id="image" accept="image/*" multiple>
+                    </div>
+
+                    <div id="preview-container" class="preview-container"></div>
+
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        发布 🚀
+                    </button>
+                </form>
+                <div id="loading" class="loading">发布中...</div>
+            </div>
+        </div>
+
+        <!-- 筛选栏模块 -->
+        <div class="module-container">
+            <div class="module-wrapper">
+                <div class="filter-group">
+                    <input type="date" id="dateFilter" placeholder="选择日期" pattern="\d{4}-\d{2}-\d{2}">
+                    <select id="moodFilter">
+                        <option value="">所有心情</option>
                         <option value="happy">😊 开心</option>
                         <option value="sad">😢 难过</option>
                         <option value="excited">🥳 激动</option>
                         <option value="angry">😠 生气</option>
                         <option value="love">❤️ 爱你</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="user">
-                        <i class="fas fa-user"></i>
-                        选择用户 👤
-                    </label>
-                    <select id="user" required>
+                    <select id="userFilter">
+                        <option value="">所有人</option>
                         <option value="晁森豪">晁森豪 🤴</option>
                         <option value="孙佳乐">孙佳乐 👸</option>
                     </select>
                 </div>
-
-                <div class="form-group">
-                    <label for="image">
-                        <i class="fas fa-image"></i>
-                        添加图片 📸
-                    </label>
-                    <input type="file" id="image" accept="image/*" multiple>
-                </div>
-
-                <div id="preview-container" class="preview-container"></div>
-
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    发布 🚀
-                </button>
-            </form>
-            <div id="loading" class="loading">发布中...</div>
-        </div>
-
-        <div class="filter-section">
-            <div class="filter-group">
-                <input type="date" id="dateFilter" placeholder="选择日期" pattern="\d{4}-\d{2}-\d{2}">
-                <select id="moodFilter">
-                    <option value="">所有心情</option>
-                    <option value="happy">😊 开心</option>
-                    <option value="sad">😢 难过</option>
-                    <option value="excited">🥳 激动</option>
-                    <option value="angry">😠 生气</option>
-                    <option value="love">❤️ 爱你</option>
-                </select>
-                <select id="userFilter">
-                    <option value="">所有人</option>
-                    <option value="晁森豪">晁森豪 🤴</option>
-                    <option value="孙佳乐">孙佳乐 👸</option>
-                </select>
             </div>
         </div>
 
-        <div class="module-wrapper">
-            <div class="timeline-wrapper">
-                <div class="timeline">
-                    <!-- 这里的内容会由 JavaScript 动态生成 -->
+        <!-- 时间线模块 -->
+        <div class="module-container">
+            <div class="module-wrapper">
+                <div class="timeline-wrapper">
+                    <div class="timeline">
+                        <!-- 这里的内容会由 JavaScript 动态生成 -->
+                    </div>
                 </div>
             </div>
         </div>
