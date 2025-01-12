@@ -13,6 +13,7 @@
             <div class="title-wrapper">
                 <h1 class="main-title">✨ 孙佳乐的小窝 🏡</h1>
                 <p class="subtitle">🌟 记录生活中的每一个瞬间 💫</p>
+                <button id="migrateBtn" class="migrate-btn">迁移旧数据 📦</button>
             </div>
         </header>
 
@@ -23,9 +24,33 @@
                         <i class="fas fa-pen"></i>
                         写下此刻的心情 ✍️
                     </label>
-                    <textarea id="content" required></textarea>
+                    <div class="content-controls">
+                        <textarea id="content" required></textarea>
+                        <div class="voice-controls">
+                            <button type="button" id="recordVoiceBtn" class="voice-btn">
+                                <i class="fas fa-microphone"></i> 录音 (最长30秒)
+                            </button>
+                            <div class="voice-timer" style="display: none;">00:00</div>
+                            <audio id="voicePreview" controls style="display: none;"></audio>
+                        </div>
+                    </div>
                 </div>
                 
+                <div class="form-group">
+                    <label for="mood">
+                        <i class="fas fa-smile"></i>
+                        选择心情 😊
+                    </label>
+                    <select id="mood">
+                        <option value="">选择心情</option>
+                        <option value="happy">😊 开心</option>
+                        <option value="sad">😢 难过</option>
+                        <option value="excited">🥳 激动</option>
+                        <option value="angry">😠 生气</option>
+                        <option value="love">❤️ 爱你</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="user">
                         <i class="fas fa-user"></i>
@@ -55,13 +80,51 @@
             <div id="loading" class="loading">发布中...</div>
         </div>
 
-        <div class="timeline-wrapper">
-            <div class="timeline"></div>
+        <div class="filter-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索内容...">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="filter-group">
+                <input type="date" id="dateFilter" placeholder="选择日期">
+                <select id="moodFilter">
+                    <option value="">所有心情</option>
+                    <option value="happy">😊 开心</option>
+                    <option value="sad">😢 难过</option>
+                    <option value="excited">🥳 激动</option>
+                    <option value="angry">😠 生气</option>
+                    <option value="love">❤️ 爱你</option>
+                </select>
+                <select id="userFilter">
+                    <option value="">所有人</option>
+                    <option value="晁森豪">晁森豪 🤴</option>
+                    <option value="孙佳乐">孙佳乐 👸</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="timeline-outer-wrapper">
+            <div class="timeline-wrapper">
+                <div class="timeline">
+                    <!-- 这里的内容会由 JavaScript 动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="messages-container">
+            <div id="messagesList"></div>
+        </div>
+
+        <!-- 添加图片预览模态框 -->
+        <div id="imagePreviewModal" class="image-preview-modal">
+            <span class="close-modal">&times;</span>
+            <img id="previewImage" class="preview-modal-content">
         </div>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
     <script>
@@ -75,7 +138,11 @@
             measurementId: "G-EW0NKQJGRZ",
             databaseURL: "https://sjl-and-csh-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        // 初始化 Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
     </script>
     <script src="script.js"></script>
 </body>
