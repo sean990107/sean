@@ -133,6 +133,9 @@ function renderTimeline() {
         const isNewItem = index >= (currentPage - 1) * POSTS_PER_PAGE;
         const animationClass = isNewItem ? 'new-item' : '';
         
+        const userHtml = `<div class="timeline-user">${item.user}</div>`;
+        const dateHtml = `<div class="timeline-date">${formatDate(item.timestamp || new Date(), true)}</div>`;
+        
         contentContainer.insertAdjacentHTML('beforeend', `
             <div class="timeline-item ${animationClass}" data-user="${item.user}">
                 <div class="timeline-header">
@@ -218,9 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始化数据库连接
     initializeDatabase();
     
-    // 添加迁移按钮
-    addMigrateButton();
-    
     // 设置实时更新之前先加载数据
     loadPosts().then(() => {
         console.log('初始数据加载完成');
@@ -303,103 +303,6 @@ function setupRealtimeUpdates() {
         });
 }
 
-// 添加迁移按钮到页面
-function addMigrateButton() {
-    const button = document.getElementById('migrateBtn');
-    if (button) {
-        button.onclick = migrateFromRealtimeDB;
-    }
-}
-
-// 数据迁移函数
-async function migrateFromRealtimeDB() {
-    console.log('开始数据迁移...');
-    
-    const progressDiv = document.createElement('div');
-    progressDiv.className = 'migrate-progress';
-    progressDiv.innerHTML = `
-        <div class="progress-text">正在迁移数据... 0%</div>
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-    `;
-    document.body.appendChild(progressDiv);
-    
-    try {
-        const rtdb = firebase.initializeApp({
-            databaseURL: "https://sjl-and-csh-default-rtdb.asia-southeast1.firebasedatabase.app"
-        }, "oldDB").database();
-
-        console.log('正在连接 Realtime Database...');
-        progressDiv.querySelector('.progress-text').textContent = '正在读取旧数据...';
-        
-        const snapshot = await rtdb.ref('/posts')
-            .orderByChild('timestamp')
-            .once('value');
-        
-        // 确保数据存在且格式正确
-        const rtdbData = snapshot.val();
-        if (!rtdbData) {
-            throw new Error('没有找到需要迁移的数据');
-        }
-
-        // 转换数据格式并保留原始ID
-        const posts = Object.entries(rtdbData).map(([key, value]) => ({
-            id: key,
-            content: value.content || '',
-            user: value.user || '',
-            mood: value.mood || '',
-            images: value.images || [],
-            timestamp: firebase.firestore.Timestamp.fromMillis(
-                typeof value.timestamp === 'number' ? value.timestamp : Date.now()
-            ),
-            date: value.date || new Date().toISOString().split('T')[0]
-        }));
-
-        // 使用批处理写入 Firestore
-        const batchSize = 500;
-        const batches = [];
-        
-        for (let i = 0; i < posts.length; i += batchSize) {
-            const batch = db.batch();
-            const currentBatch = posts.slice(i, i + batchSize);
-            
-            currentBatch.forEach(post => {
-                const docRef = db.collection('posts').doc(post.id);  // 使用原始ID
-                batch.set(docRef, post);
-            });
-            
-            batches.push(batch);
-            
-            const progress = Math.min(100, Math.round((i + batchSize) / posts.length * 100));
-            progressDiv.querySelector('.progress-text').textContent = `正在迁移数据... ${progress}%`;
-            progressDiv.querySelector('.progress-fill').style.width = `${progress}%`;
-        }
-        
-        // 等待所有批处理完成
-        await Promise.all(batches.map(batch => batch.commit()));
-        console.log(`成功迁移 ${posts.length} 条数据`);
-        
-        progressDiv.querySelector('.progress-text').textContent = '迁移完成！';
-        setTimeout(() => progressDiv.remove(), 2000);
-        showMessage('数据迁移完成！✨', 'success');
-        
-        loadPosts();
-        
-    } catch (error) {
-        console.error('数据迁移失败:', error);
-        progressDiv.remove();
-        let errorMessage = '数据迁移失败: ';
-        if (error.code === 'PERMISSION_DENIED') {
-            errorMessage += '没有访问权限，请检查数据库规则';
-        } else if (error.code === 'DATABASE_NOT_FOUND') {
-            errorMessage += '找不到数据库，请检查数据库URL';
-        } else {
-            errorMessage += error.message || '未知错误';
-        }
-        showMessage(errorMessage, 'error');
-    }
-}
 // 处理图片上传
 function handleImageUpload(event) {
     const files = event.target.files;
@@ -534,7 +437,6 @@ function setupFilters() {
     const dateFilter = document.getElementById('dateFilter');
     const moodFilter = document.getElementById('moodFilter');
     const userFilter = document.getElementById('userFilter');
-    const searchInput = document.getElementById('searchInput');
     
     // 保存原始数据
     let originalData = [];
@@ -542,16 +444,6 @@ function setupFilters() {
     // 应用筛选
     function applyFilters() {
         let filteredData = [...originalData];
-        
-        // 搜索筛选
-        if (searchInput.value.trim()) {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            filteredData = filteredData.filter(post => 
-                post.content.toLowerCase().includes(searchTerm) ||
-                post.user.toLowerCase().includes(searchTerm) ||
-                (post.mood && getMoodEmoji(post.mood).toLowerCase().includes(searchTerm))
-            );
-        }
         
         // 日期筛选
         if (dateFilter.value) {
@@ -577,14 +469,7 @@ function setupFilters() {
         timelineData = tempTimelineData;
     }
     
-    // 添加搜索框事件监听器（带防抖）
-    let searchTimeout;
-    searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(applyFilters, 300);
-    });
-    
-    // 添加其他筛选器的事件监听
+    // 添加筛选器的事件监听
     dateFilter.addEventListener('change', applyFilters);
     moodFilter.addEventListener('change', applyFilters);
     userFilter.addEventListener('change', applyFilters);
@@ -724,17 +609,13 @@ async function loadReplies(postId) {
             repliesHtml = snapshot.docs.map(doc => {
                 const reply = doc.data();
                 const replyId = doc.id;
+                const replyUserHtml = `<span class="reply-user">${reply.user}</span>`;
+                const replyTimeHtml = `<span class="reply-time">${formatDate(reply.timestamp, true)}</span>`;
                 return `
                     <div class="reply-item" data-user="${reply.user}" data-reply-id="${replyId}">
                         <div class="reply-header">
-                            <span class="reply-user">
-                                ${reply.user === '晁森豪' ? '🤴 ' : '👸 '}
-                                ${reply.user}
-                                ${reply.user === '晁森豪' ? ' 💫' : ' ✨'}
-                            </span>
-                            <span class="reply-time">
-                                🕐 ${formatDate(reply.timestamp, true)} ⌛
-                            </span>
+                            ${replyUserHtml}
+                            ${replyTimeHtml}
                         </div>
                         <div class="reply-content">
                             ${reply.content}
@@ -902,17 +783,13 @@ async function loadNestedReplies(parentReplyId) {
             }
             
             const nestedRepliesHtml = replies.map(reply => {
+                const replyUserHtml = `<span class="reply-user">${reply.user}</span>`;
+                const replyTimeHtml = `<span class="reply-time">${formatDate(reply.timestamp, true)}</span>`;
                 return `
                     <div class="nested-reply" data-user="${reply.user}">
                         <div class="reply-header">
-                            <span class="reply-user">
-                                ${reply.user === '晁森豪' ? '🤴 ' : '👸 '}
-                                ${reply.user}
-                                ${reply.user === '晁森豪' ? ' 💫' : ' ✨'}
-                            </span>
-                            <span class="reply-time">
-                                🕐 ${formatDate(reply.timestamp, true)} ⌛
-                            </span>
+                            ${replyUserHtml}
+                            ${replyTimeHtml}
                         </div>
                         <div class="reply-content">
                             ${reply.content}
@@ -1123,4 +1000,3 @@ async function uploadVoice(voiceBlob) {
         throw error;
     }
 }
-
