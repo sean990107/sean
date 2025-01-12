@@ -34,7 +34,27 @@ function showMessage(message, type = 'info') {
     }, 3000);
 }
 
-function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE, retryCount = 3) {
+// 添加重试机制的函数
+function withRetry(operation, maxRetries = 3, delay = 1000) {
+    return new Promise(async (resolve, reject) => {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const result = await operation();
+                return resolve(result);
+            } catch (error) {
+                if (i === maxRetries - 1) {
+                    reject(error);
+                } else {
+                    console.log(`重试操作 (${i + 1}/${maxRetries})...`);
+                    await new Promise(r => setTimeout(r, delay));
+                }
+            }
+        }
+    });
+}
+
+// 修改 loadPosts 函数
+async function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE) {
     console.log('开始加载帖子...');
     
     const timelineEl = document.querySelector('.timeline');
@@ -42,19 +62,20 @@ function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE, retryCount = 3)
         timelineEl.innerHTML = '<div class="loading-indicator">加载中... 💫</div>';
     }
     
-    let query = db.collection('posts')
-        .orderBy('timestamp', 'desc')
-        .limit(limit);
-    
-    if (lastTimestamp) {
-        query = query.startAfter(lastTimestamp);
-    }
-    
-    return query.get()
-        .then(snapshot => {
+    try {
+        const result = await withRetry(async () => {
+            let query = db.collection('posts')
+                .orderBy('timestamp', 'desc')
+                .limit(limit);
+            
+            if (lastTimestamp) {
+                query = query.startAfter(lastTimestamp);
+            }
+            
+            const snapshot = await query.get();
+            
             if (snapshot.empty) {
                 if (currentPage === 1) {
-                    const timelineEl = document.querySelector('.timeline');
                     timelineEl.innerHTML = '<div class="timeline-empty">还没有任何记录哦 ✨</div>';
                 }
                 return { posts: [], hasMore: false };
@@ -65,45 +86,40 @@ function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE, retryCount = 3)
                 ...doc.data()
             }));
             
-            // 更新数据
             if (currentPage === 1) {
                 timelineData = [...posts];
             } else {
-                // 确保不重复添加数据
                 const newPosts = posts.filter(post => 
                     !timelineData.some(existing => existing.id === post.id)
                 );
                 timelineData = [...timelineData, ...newPosts];
             }
             
-            // 更新最后一条记录的引用
             lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
             
             requestAnimationFrame(() => {
-                renderTimeline(currentPage > 1); // 只有加载更多时保持滚动位置
+                renderTimeline(currentPage > 1);
             });
             
             return {
                 posts,
                 hasMore: posts.length === limit
             };
-        })
-        .catch(error => {
-            console.error('加载帖子失败:', error);
-            
-            // 如果还有重试次数，则重试
-            if (retryCount > 0) {
-                console.log(`还有 ${retryCount} 次重试机会，1秒后重试...`);
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve(loadPosts(lastTimestamp, limit, retryCount - 1));
-                    }, 1000);
-                });
-            }
-            
-            showMessage('加载失败，请检查网络连接 🔄', 'error');
-            return { posts: [], hasMore: false };
         });
+        
+        return result;
+    } catch (error) {
+        console.error('加载帖子失败:', error);
+        showMessage('加载失败，请检查网络连接后重试 🔄', 'error');
+        
+        // 如果有缓存数据，显示缓存数据
+        if (timelineData.length > 0) {
+            showMessage('显示缓存数据 📱', 'info');
+            renderTimeline();
+        }
+        
+        return { posts: [], hasMore: false };
+    }
 }
 
 // 预加载下一页
@@ -136,8 +152,12 @@ function renderTimeline() {
     }
 
     const html = timelineData.map(post => {
+        // 获取表情
+        const moodEmoji = getMoodEmoji(post.mood);
+        const userEmoji = post.user === '晁森豪' ? '🤴' : '👸';
+        
         // 处理图片内容
-        const imageContent = post.images ? renderImages(post.images, timelineEl) : '';
+        const imageContent = post.images ? renderImages(post.images) : '';
         
         // 处理语音内容
         const voiceContent = post.voice ? `
@@ -146,44 +166,50 @@ function renderTimeline() {
             </div>
         ` : '';
 
-        // 获取表情
-        const moodEmoji = getMoodEmoji(post.mood);
-        const userEmoji = post.user === '晁森豪' ? '🤴' : '👸';
-
-        // 使用全局 currentUser 进行判断
         const isCurrentUser = post.user === currentUser;
-
-        // 添加删除按钮（仅对应用户可见）
-        const deleteButton = `
-            <button class="delete-post-btn" onclick="deletePost('${post.id}')" 
-                    style="display: ${isCurrentUser ? 'inline-block' : 'none'}"
-                    title="删除">
+        const deleteButton = isCurrentUser ? `
+            <span class="separator"></span>
+            <button class="delete-post-btn" onclick="deletePost('${post.id}')">
                 <i class="fas fa-trash-alt"></i>
             </button>
-        `;
+        ` : '';
 
         return `
             <div class="timeline-item" data-user="${post.user}">
-                <div class="post-header">
-                    <span class="post-user">${post.user} ${userEmoji}</span>
-                    <span class="post-time">${formatTime(post.timestamp)}</span>
-                    ${deleteButton}
-                </div>
-                <div class="post-content">${post.content}</div>
-                ${imageContent}
-                ${voiceContent}
-                <div class="post-mood">${moodEmoji} ${post.mood}</div>
-                <div class="reply-section">
-                    <button class="reply-toggle-btn" onclick="toggleReplyForm('${post.id}')">
-                        <i class="fas fa-comment"></i> 回复
-                    </button>
-                    <div id="replyForm-${post.id}" class="reply-form" style="display: none;">
-                        <textarea class="reply-input" placeholder="写下你的回复..."></textarea>
-                        <button class="reply-submit-btn" onclick="submitReply('${post.id}')">
-                            <i class="fas fa-paper-plane"></i> 发送
-                        </button>
+                <div class="timeline-header">
+                    <div class="timeline-user" style="font-size: calc(var(--base-font-size) * 0.84) !important;">
+                        <span>${userEmoji}</span>
+                        <span>${post.user}</span>
                     </div>
-                    <div id="replies-${post.id}" class="replies"></div>
+                    <div class="timeline-date" style="font-size: calc(var(--base-font-size) * 0.84) !important;">
+                        <i class="far fa-clock"></i>
+                        <span>${formatTime(post.timestamp)}</span>
+                        ${deleteButton}
+                    </div>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-mood" ${post.mood ? `data-mood="${post.mood}"` : ''}>
+                        ${post.mood ? `<span>${moodEmoji}</span><span>${post.mood}</span>` : ''}
+                    </div>
+                    <div class="timeline-text" style="font-size: calc(var(--base-font-size) * 0.91) !important;">
+                        ${post.content}
+                    </div>
+                    ${imageContent}
+                    ${voiceContent}
+                </div>
+                <div class="timeline-footer">
+                    <div class="reply-section">
+                        <button class="reply-toggle-btn" onclick="toggleReplyForm('${post.id}')">
+                            <i class="fas fa-comment"></i> 回复
+                        </button>
+                        <div id="replyForm-${post.id}" class="reply-form" style="display: none;">
+                            <textarea class="reply-input" placeholder="写下你的回复..."></textarea>
+                            <button class="reply-submit-btn" onclick="submitReply('${post.id}')">
+                                <i class="fas fa-paper-plane"></i> 发送
+                            </button>
+                        </div>
+                        <div id="replies-${post.id}" class="replies"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -230,21 +256,12 @@ function initializeDatabase() {
 function setupRealtimeUpdates() {
     console.log('设置实时更新监听...');
     
-    let initialLoad = true;
-    
-    db.collection('posts')
+    let unsubscribe = db.collection('posts')
         .orderBy('timestamp', 'desc')
         .onSnapshot(snapshot => {
             const changes = snapshot.docChanges();
             console.log('收到实时更新:', changes.length, '条变更');
             
-            // 忽略首次加载
-            if (initialLoad) {
-                initialLoad = false;
-                return;
-            }
-            
-            // 处理增量更新
             changes.forEach(change => {
                 const post = {
                     id: change.doc.id,
@@ -252,17 +269,10 @@ function setupRealtimeUpdates() {
                 };
                 
                 if (change.type === 'added') {
-                    console.log('新增帖子:', post);
-                    // 检查是否是新发布的帖子（最近5秒内）
-                    const isNewPost = post.timestamp && 
-                        (Date.now() - post.timestamp.toMillis() < 5000);
-                    
                     if (!timelineData.some(p => p.id === post.id)) {
-                        if (isNewPost) {
-                            timelineData.unshift(post);
-                        }
+                        timelineData.unshift(post);
                         requestAnimationFrame(() => {
-                            renderTimeline(true); // true 表示保持滚动位置
+                            renderTimeline(true);
                         });
                     }
                 }
@@ -291,8 +301,21 @@ function setupRealtimeUpdates() {
             });
         }, error => {
             console.error('监听更新失败:', error);
-            showMessage('实时更新连接失败，请刷新页面 🔄', 'error');
+            showMessage('实时更新连接失败，将每30秒自动重试 🔄', 'warning');
+            
+            // 30秒后重试
+            setTimeout(() => {
+                unsubscribe && unsubscribe();
+                setupRealtimeUpdates();
+            }, 30000);
         });
+        
+    // 添加网络状态监听
+    window.addEventListener('online', () => {
+        showMessage('网络已恢复，重新连接... 🌐', 'success');
+        unsubscribe && unsubscribe();
+        setupRealtimeUpdates();
+    });
 }
 
 // 处理图片上传
@@ -1309,3 +1332,13 @@ function initializeApp() {
     setupFilters();
     initVoiceRecording();
 }
+
+// 初始化时添加离线持久化
+firebase.firestore().enablePersistence()
+    .catch((err) => {
+        if (err.code == 'failed-precondition') {
+            console.log('多个标签页打开，离线持久化只能在一个标签页中启用');
+        } else if (err.code == 'unimplemented') {
+            console.log('当前浏览器不支持离线持久化');
+        }
+    });
