@@ -38,7 +38,7 @@ body {
 .title-wrapper,
 .post-form-card,
 .filter-section,
-.timeline-outer-wrapper {
+.module-wrapper {
     position: relative;
     width: 85% !important;
     max-width: 510px !important;
@@ -55,7 +55,7 @@ body {
 .title-wrapper::before,
 .post-form-card::before,
 .filter-section::before,
-.timeline-outer-wrapper::before {
+.module-wrapper::before {
     content: '';
     position: absolute;
     top: -8px;
@@ -73,7 +73,7 @@ body {
 .title-wrapper:hover,
 .post-form-card:hover,
 .filter-section:hover,
-.timeline-outer-wrapper:hover {
+.module-wrapper:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
 }
@@ -81,7 +81,7 @@ body {
 .title-wrapper:hover::before,
 .post-form-card:hover::before,
 .filter-section:hover::before,
-.timeline-outer-wrapper:hover::before {
+.module-wrapper:hover::before {
     top: -12px;
     left: -12px;
     right: -12px;
@@ -108,7 +108,7 @@ body {
     .title-wrapper,
     .post-form-card,
     .filter-section,
-    .timeline-outer-wrapper {
+    .module-wrapper {
         width: 95% !important;
         padding: 15px !important;
         margin: 20px auto !important; /* 从 10px 增加到 20px */
@@ -117,7 +117,7 @@ body {
     .title-wrapper::before,
     .post-form-card::before,
     .filter-section::before,
-    .timeline-outer-wrapper::before {
+    .module-wrapper::before {
         top: -5px;
         left: -5px;
         right: -5px;
@@ -135,7 +135,7 @@ body {
     .title-wrapper,
     .post-form-card,
     .filter-section,
-    .timeline-outer-wrapper {
+    .module-wrapper {
         width: 90% !important;
     }
 
@@ -768,7 +768,7 @@ body {
     .title-wrapper,
     .post-form-card,
     .filter-section,
-    .timeline-outer-wrapper {
+    .module-wrapper {
         width: 95% !important;
         margin: 0 auto 15px auto !important;
     }
@@ -793,7 +793,7 @@ body {
     .title-wrapper,
     .post-form-card,
     .filter-section,
-    .timeline-outer-wrapper {
+    .module-wrapper {
         width: 85% !important;
     }
 
@@ -812,7 +812,7 @@ body {
     .title-wrapper,
     .post-form-card,
     .filter-section,
-    .timeline-outer-wrapper {
+    .module-wrapper {
         width: 100% !important; /* 从 85% 改为 100% */
     }
 
@@ -1571,46 +1571,27 @@ audio {
 
 /* 日期分隔符样式 */
 .date-divider {
-    position: sticky;
-    top: -1px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.95) 80%, transparent 100%);
-    padding: 25px 0 15px 0;
-    margin: 0 0 20px 0;
-    z-index: 2;
-    transform: translateY(-25px);
+    /* 移除 sticky 定位 */
+    position: relative;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 0;
+    margin: 10px 0;
     text-align: center;
-        display: flex;
-    justify-content: center;
-        align-items: center;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.95);
+    z-index: 1;
 }
 
 /* 调整日期文字容器的样式 */
 .date-divider span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.9);
-    padding: 5px 15px;
+    padding: 6px 15px;
     border-radius: 15px;
     font-size: 0.9em;
     color: var(--text-light);
     font-weight: 500;
     box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin: 0 auto;
-}
-
-/* 调整内容容器的样式 */
-.timeline-content {
-    padding: 30px 0 30px 0;
-        width: 100%;
-    box-sizing: border-box;
-}
-
-/* 确保第一个日期分隔符不会有上方空白 */
-.timeline-content .date-divider:first-child {
-    margin-top: 0;
-    padding-top: 25px;
 }
 
 /* 年月日分隔样式 */
@@ -1626,6 +1607,22 @@ audio {
 
 .date-divider span .day {
     color: var(--text-light);
+}
+
+/* 调整内容容器的样式 */
+.timeline-content {
+    padding-top: 10px;
+}
+
+/* 确保第一个日期分隔符不会有上方空白 */
+.timeline-content .date-divider:first-child {
+    margin-top: 0;
+    padding-top: 15px;
+}
+
+/* 调整时间线项目的上边距，避免与日期重叠 */
+.timeline-item {
+    margin-top: 20px !important;
 }
 
 /* 加载更多按钮样式修复 */
@@ -2333,7 +2330,7 @@ audio {
     .title-wrapper,
     .post-form-card,
     .filter-section,
-    .timeline-outer-wrapper {
+    .module-wrapper {
         width: 100% !important; /* 从 85% 改为 100% */
     }
 
