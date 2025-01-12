@@ -1,9 +1,10 @@
 // 全局变量声明
 let db = firebase.firestore();  // 直接初始化
 let timelineData = [];
+let currentUser = null; // 当前用户
 
 // 分页相关变量
-const POSTS_PER_PAGE = 10;
+const POSTS_PER_PAGE = 5;
 let currentPage = 1;
 let lastVisiblePost = null;
 
@@ -15,6 +16,10 @@ let recordingDuration = 0;
 
 // 添加最大录音时长限制
 const MAX_RECORDING_TIME = 30; // 30秒
+
+// 添加缓存系统
+const postCache = new Map();
+const imageCache = new Map();
 
 // 消息提示函数
 function showMessage(message, type = 'info') {
@@ -29,7 +34,7 @@ function showMessage(message, type = 'info') {
     }, 3000);
 }
 
-function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE) {
+function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE, retryCount = 3) {
     console.log('开始加载帖子...');
     
     const timelineEl = document.querySelector('.timeline');
@@ -39,17 +44,19 @@ function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE) {
     
     let query = db.collection('posts')
         .orderBy('timestamp', 'desc')
-        .limit(limit);  // 只获取需要显示的数据量
+        .limit(limit);
     
-    // 如果有上次加载的最后一条数据的时间戳，从那里开始加载
     if (lastTimestamp) {
         query = query.startAfter(lastTimestamp);
     }
     
     return query.get()
         .then(snapshot => {
-            if (snapshot.empty && currentPage === 1) {
-                timelineEl.innerHTML = '<div class="timeline-empty">还没有任何记录哦 ✨</div>';
+            if (snapshot.empty) {
+                if (currentPage === 1) {
+                    const timelineEl = document.querySelector('.timeline');
+                    timelineEl.innerHTML = '<div class="timeline-empty">还没有任何记录哦 ✨</div>';
+                }
                 return { posts: [], hasMore: false };
             }
             
@@ -58,201 +65,152 @@ function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE) {
                 ...doc.data()
             }));
             
-            // 追加新数据而不是替换
+            // 更新数据
             if (currentPage === 1) {
-                timelineData = posts;
+                timelineData = [...posts];
             } else {
-                timelineData = [...timelineData, ...posts];
+                // 确保不重复添加数据
+                const newPosts = posts.filter(post => 
+                    !timelineData.some(existing => existing.id === post.id)
+                );
+                timelineData = [...timelineData, ...newPosts];
             }
             
-            renderTimeline();
-            
-            const hasMore = posts.length === limit;
+            // 更新最后一条记录的引用
             lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
             
-            return { posts, hasMore };
+            requestAnimationFrame(() => {
+                renderTimeline(currentPage > 1); // 只有加载更多时保持滚动位置
+            });
+            
+            return {
+                posts,
+                hasMore: posts.length === limit
+            };
+        })
+        .catch(error => {
+            console.error('加载帖子失败:', error);
+            
+            // 如果还有重试次数，则重试
+            if (retryCount > 0) {
+                console.log(`还有 ${retryCount} 次重试机会，1秒后重试...`);
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve(loadPosts(lastTimestamp, limit, retryCount - 1));
+                    }, 1000);
+                });
+            }
+            
+            showMessage('加载失败，请检查网络连接 🔄', 'error');
+            return { posts: [], hasMore: false };
         });
 }
 
+// 预加载下一页
+function preloadNextPage(lastTimestamp) {
+    const nextQuery = db.collection('posts')
+        .orderBy('timestamp', 'desc')
+        .startAfter(lastTimestamp)
+        .limit(POSTS_PER_PAGE);
+        
+    nextQuery.get().then(snapshot => {
+        const posts = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        // 缓存下一页数据
+        const cacheKey = `posts_${lastTimestamp}_${POSTS_PER_PAGE}`;
+        postCache.set(cacheKey, {
+            posts,
+            hasMore: posts.length === POSTS_PER_PAGE
+        });
+    });
+}
+
 function renderTimeline() {
-    console.log('开始渲染时间线');
-    console.log('当前 timelineData:', timelineData);
-    
     const timelineEl = document.querySelector('.timeline');
-    
-    if (!timelineEl) {
-        console.error('找不到时间线元素');
-        return;
-    }
-    
     if (!timelineData || !timelineData.length) {
-        console.log('没有数据可渲染');
         timelineEl.innerHTML = '<div class="timeline-empty">还没有任何记录哦 ✨</div>';
         return;
     }
 
-    // 按时间戳排序所有帖子（从新到旧）
-    const sortedPosts = [...timelineData].sort((a, b) => {
-        const timeA = a.timestamp instanceof firebase.firestore.Timestamp ? a.timestamp.toMillis() : a.timestamp;
-        const timeB = b.timestamp instanceof firebase.firestore.Timestamp ? b.timestamp.toMillis() : b.timestamp;
-        return timeB - timeA;
-    });
+    const html = timelineData.map(post => {
+        // 处理图片内容
+        const imageContent = post.images ? renderImages(post.images, timelineEl) : '';
+        
+        // 处理语音内容
+        const voiceContent = post.voice ? `
+            <div class="voice-preview-container">
+                <audio controls src="${post.voice}"></audio>
+            </div>
+        ` : '';
 
-    // 根据当前页码限制显示的数量
-    const postsToShow = sortedPosts.slice(0, POSTS_PER_PAGE * currentPage);
-    const hasMore = sortedPosts.length > postsToShow.length;
+        // 获取表情
+        const moodEmoji = getMoodEmoji(post.mood);
+        const userEmoji = post.user === '晁森豪' ? '🤴' : '👸';
 
-    console.log('排序后的帖子:', sortedPosts);
-    
-    // 清空现有内容
-    timelineEl.innerHTML = '';
-    
-    // 创建新的内容容器
-    const contentContainer = document.createElement('div');
-    contentContainer.className = 'timeline-content';
-    let currentDate = null;
-    
-    postsToShow.forEach((item, index) => {
-        // 检查日期是否变化
-        const postDate = formatDate(item.timestamp || new Date(), false);
-        if (postDate !== currentDate) {
-            const [year, month, day] = postDate.split('-');
-            contentContainer.insertAdjacentHTML('beforeend', `
-                <div class="date-divider">
-                    <span>
-                        <span class="year">${year}年</span>
-                        <span class="month">${month}月</span>
-                        <span class="day">${day}日</span>
-                    </span>
+        // 使用全局 currentUser 进行判断
+        const isCurrentUser = post.user === currentUser;
+
+        // 添加删除按钮（仅对应用户可见）
+        const deleteButton = `
+            <button class="delete-post-btn" onclick="deletePost('${post.id}')" 
+                    style="display: ${isCurrentUser ? 'inline-block' : 'none'}"
+                    title="删除">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `;
+
+        return `
+            <div class="timeline-item" data-user="${post.user}">
+                <div class="post-header">
+                    <span class="post-user">${post.user} ${userEmoji}</span>
+                    <span class="post-time">${formatTime(post.timestamp)}</span>
+                    ${deleteButton}
                 </div>
-            `);
-            currentDate = postDate;
-        }
-        
-        // 为新加载的内容添加动画类
-        const isNewItem = index >= (currentPage - 1) * POSTS_PER_PAGE;
-        const animationClass = isNewItem ? 'new-item' : '';
-        
-        const userHtml = `<div class="timeline-user">${item.user}</div>`;
-        const dateHtml = `<div class="timeline-date">${formatDate(item.timestamp || new Date(), true)}</div>`;
-        
-        contentContainer.insertAdjacentHTML('beforeend', `
-            <div class="timeline-item ${animationClass}" data-user="${item.user}">
-                <div class="timeline-header">
-                    ${item.user === '晁森豪' ? `
-                        <div class="timeline-user">
-                            ${item.user === '晁森豪' ? '🤴 ' : '👸 '}
-                            ${item.user} 
-                            ${item.user === '晁森豪' ? ' 💫' : ' ✨'}
-                        </div>
-                        <div class="timeline-date">
-                            🕐 ${formatDate(item.timestamp || new Date(), true)} ⌛
-                        </div>
-                    ` : `
-                        <div class="timeline-date">
-                            🕐 ${formatDate(item.timestamp || new Date(), true)} ⌛
-                        </div>
-                        <div class="timeline-user">
-                            ${item.user === '晁森豪' ? '🤴 ' : '👸 '}
-                            ${item.user} 
-                            ${item.user === '晁森豪' ? ' 💫' : ' ✨'}
-                        </div>
-                    `}
-                </div>
-                ${item.mood ? `
-                    <div class="timeline-mood" data-mood="${item.mood}">
-                        ${getMoodEmoji(item.mood)}
-                    </div>
-                ` : ''}
-                <div class="timeline-text">
-                    ${item.content.split('\n').map(line => `<p>${line}</p>`).join('')}
-                </div>
-                ${item.images && item.images.length ? `
-                    <div class="timeline-media">
-                        ${item.images.map(img => `
-                            <img src="${img}" 
-                                 alt="照片" 
-                                 onclick="showImagePreview('${img}')"
-                                 loading="lazy"
-                                 style="cursor: pointer;">
-                        `).join('')}
-                    </div>
-                ` : ''}
-                ${item.voice ? `
-                    <div class="voice-message">
-                        <audio src="${item.voice}" controls></audio>
-                    </div>
-                ` : ''}
-                <div class="timeline-footer">
-                    <div class="reply-section">
-                        <div class="replies" id="replies-${item.id}">
-                            <!-- 回复内容将在这里显示 -->
-                        </div>
-                        <button class="reply-toggle-btn" onclick="toggleReplyForm('${item.id}')">
-                            <i class="fas fa-reply"></i> 回复
-                        </button>
-                        <div class="reply-form" id="reply-form-${item.id}" style="display: none;">
-                            <textarea class="reply-input" placeholder="写下你的回复..."></textarea>
-                            <button class="reply-submit-btn" onclick="submitReply('${item.id}')">发送</button>
-                        </div>
-                    </div>
-                    <button class="delete-btn" onclick="deletePost('${item.id}')">
-                        <i class="fas fa-trash"></i>
+                <div class="post-content">${post.content}</div>
+                ${imageContent}
+                ${voiceContent}
+                <div class="post-mood">${moodEmoji} ${post.mood}</div>
+                <div class="reply-section">
+                    <button class="reply-toggle-btn" onclick="toggleReplyForm('${post.id}')">
+                        <i class="fas fa-comment"></i> 回复
                     </button>
+                    <div id="replyForm-${post.id}" class="reply-form" style="display: none;">
+                        <textarea class="reply-input" placeholder="写下你的回复..."></textarea>
+                        <button class="reply-submit-btn" onclick="submitReply('${post.id}')">
+                            <i class="fas fa-paper-plane"></i> 发送
+                        </button>
+                    </div>
+                    <div id="replies-${post.id}" class="replies"></div>
                 </div>
             </div>
-        `);
-        loadReplies(item.id);
+        `;
+    }).join('');
+
+    timelineEl.innerHTML = html;
+
+    // 加载每个帖子的回复
+    timelineData.forEach(post => {
+        loadReplies(post.id);
     });
-    
-    // 添加内容到页面
-    timelineEl.appendChild(contentContainer);
-    
-    // 如果还有更多数据可以加载，显示加载更多按钮
-    if (hasMore) {
-        addLoadMoreButton();
-    }
 }
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('页面加载完成，初始化...');
+    // 显示选择弹窗
+    const modalEl = document.getElementById('userSelectModal');
+    const containerEl = document.querySelector('.container');
     
-    // 初始化数据库连接
-    initializeDatabase();
-    
-    // 设置实时更新之前先加载数据
-    loadPosts().then(() => {
-        console.log('初始数据加载完成');
-        // 设置实时更新
-        setupRealtimeUpdates();
-    }).catch(error => {
-        console.error('初始数据加载失败:', error);
-    });
-    
-    // 监听网络状态
-    window.addEventListener('online', () => {
-        console.log('网络已连接');
-        showMessage('网络已连接 🌐', 'success');
-        loadPosts();
-    });
-
-    window.addEventListener('offline', () => {
-        console.log('网络已断开');
-        showMessage('网络已断开，使用离线数据 ⚠️', 'error');
-    });
-    
-    // 添加图片上传监听器
-    document.getElementById('image').addEventListener('change', handleImageUpload);
-    
-    // 添加表单提交监听器
-    document.getElementById('post-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        submitPost();
-    });
-    
-    setupFilters();
-    initVoiceRecording();
+    if (!currentUser) {
+        modalEl.style.display = 'flex';
+        containerEl.style.display = 'none';
+    } else {
+        modalEl.style.display = 'none';
+        containerEl.style.display = 'block';
+        initializeApp();
+    }
 });
 
 // 修改 initializeDatabase 函数
@@ -271,35 +229,69 @@ function initializeDatabase() {
 // 修改 setupRealtimeUpdates 函数
 function setupRealtimeUpdates() {
     console.log('设置实时更新监听...');
+    
+    let initialLoad = true;
+    
     db.collection('posts')
         .orderBy('timestamp', 'desc')
-        .onSnapshot((snapshot) => {
-            console.log('收到实时更新:', snapshot.docChanges().length, '条变更');
-            snapshot.docChanges().forEach(change => {
+        .onSnapshot(snapshot => {
+            const changes = snapshot.docChanges();
+            console.log('收到实时更新:', changes.length, '条变更');
+            
+            // 忽略首次加载
+            if (initialLoad) {
+                initialLoad = false;
+                return;
+            }
+            
+            // 处理增量更新
+            changes.forEach(change => {
+                const post = {
+                    id: change.doc.id,
+                    ...change.doc.data()
+                };
+                
                 if (change.type === 'added') {
-                    const newPost = {
-                        id: change.doc.id,
-                        ...change.doc.data()
-                    };
-                    console.log('新增帖子:', newPost);
+                    console.log('新增帖子:', post);
                     // 检查是否是新发布的帖子（最近5秒内）
-                    const isNewPost = newPost.timestamp && 
-                        (Date.now() - newPost.timestamp.toMillis() < 5000);
+                    const isNewPost = post.timestamp && 
+                        (Date.now() - post.timestamp.toMillis() < 5000);
                     
-                    if (!timelineData.some(post => post.id === newPost.id)) {
+                    if (!timelineData.some(p => p.id === post.id)) {
                         if (isNewPost) {
-                            timelineData.unshift(newPost);
-                        } else {
-                            timelineData.push(newPost);
+                            timelineData.unshift(post);
                         }
-                        renderTimeline();
+                        requestAnimationFrame(() => {
+                            renderTimeline(true); // true 表示保持滚动位置
+                        });
                     }
                 }
-                // ... 其他代码保持不变
+                
+                if (change.type === 'modified') {
+                    console.log('修改帖子:', post);
+                    const index = timelineData.findIndex(p => p.id === post.id);
+                    if (index !== -1) {
+                        timelineData[index] = post;
+                        requestAnimationFrame(() => {
+                            renderTimeline(true);
+                        });
+                    }
+                }
+                
+                if (change.type === 'removed') {
+                    console.log('删除帖子:', post);
+                    const index = timelineData.findIndex(p => p.id === post.id);
+                    if (index !== -1) {
+                        timelineData.splice(index, 1);
+                        requestAnimationFrame(() => {
+                            renderTimeline(true);
+                        });
+                    }
+                }
             });
-        }, (error) => {
-            console.error('实时更新出错:', error);
-            showMessage('实时更新连接失败，请刷新页面', 'error');
+        }, error => {
+            console.error('监听更新失败:', error);
+            showMessage('实时更新连接失败，请刷新页面 🔄', 'error');
         });
 }
 
@@ -353,25 +345,29 @@ function getMoodEmoji(mood) {
 
 // 提交帖子
 async function submitPost() {
-    const content = document.getElementById('content').value;
+    if (!currentUser) {
+        showMessage('请先选择用户身份 😅', 'error');
+        return;
+    }
+
+    const content = document.getElementById('content').value.trim();
     const mood = document.getElementById('mood').value;
-    const user = document.getElementById('user').value;
     const imageFiles = document.getElementById('image').files;
     const loadingEl = document.getElementById('loading');
     const voicePreview = document.getElementById('voicePreview');
     
-    if (!content.trim()) {
+    if (!content) {
         showMessage('请输入内容 ✍️', 'warning');
         return;
     }
-    
+
     loadingEl.style.display = 'block';
     
     try {
         const post = {
-            content: content.trim(),
-            mood,
-            user,
+            content: content,
+            mood: mood,
+            user: currentUser, // 使用当前用户
             timestamp: firebase.firestore.Timestamp.fromDate(new Date()),
             date: new Date().toISOString().split('T')[0]
         };
@@ -397,7 +393,7 @@ async function submitPost() {
         if (voicePreview && voicePreview.src && voicePreview.src.startsWith('data:audio')) {
             try {
                 showMessage('正在处理语音...', 'info');
-                post.voice = voicePreview.src; // 直接存储 Base64 数据
+                post.voice = voicePreview.src;
                 console.log('语音数据已添加到帖子');
             } catch (error) {
                 console.error('语音处理失败:', error);
@@ -429,21 +425,27 @@ async function submitPost() {
 }
 
 // 删除帖子
-async function deletePost(postId) {
-    if (!confirm('确定要删除这条记录吗？')) return;
-    
-    try {
-        await db.collection('posts').doc(postId).delete();
-        showMessage('删除成功 🗑️', 'success');
-        
-        // 更新本地数据
-        timelineData = timelineData.filter(post => post.id !== postId);
-        renderTimeline();
-        
-    } catch (error) {
-        console.error('删除失败:', error);
-        showMessage('删除失败 😢', 'error');
-    }
+function deletePost(postId) {
+    // 先获取帖子数据进行权限验证
+    db.collection('posts').doc(postId).get().then(doc => {
+        if (doc.exists && doc.data().user === currentUser) {
+            if (confirm('确定要删除这条记录吗？')) {
+                db.collection('posts').doc(postId).delete()
+                    .then(() => {
+                        // 从数组中移除已删除的帖子
+                        timelineData = timelineData.filter(post => post.id !== postId);
+                        renderTimeline();
+                        showMessage('删除成功 🗑️', 'success');
+                    })
+                    .catch(error => {
+                        console.error('删除失败:', error);
+                        showMessage('删除失败 😢', 'error');
+                    });
+            }
+        } else {
+            showMessage('你没有权限删除这条内容 😅', 'error');
+        }
+    });
 }
 
 // 设置筛选功能
@@ -551,350 +553,270 @@ function showImagePreview(imgUrl) {
     }
 }
 
-// 修改切换回复表单的函数
+// 切换回复表单显示
 function toggleReplyForm(postId) {
-    const form = document.getElementById(`reply-form-${postId}`);
-    if (form) {
-        const isHidden = form.style.display === 'none';
-        form.style.display = isHidden ? 'block' : 'none';
-        
-        // 如果是显示表单，自动聚焦到输入框
-        if (isHidden) {
-            const input = form.querySelector('.reply-input');
-            if (input) {
-                input.focus();
-            }
-        }
+    const replyForm = document.getElementById(`replyForm-${postId}`);
+    if (replyForm) {
+        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
     }
 }
 
 // 提交回复
-async function submitReply(postId) {
-    const replyInput = document.querySelector(`#reply-form-${postId} .reply-input`);
+function submitReply(postId) {
+    if (!currentUser) {
+        showMessage('请先选择用户身份 😅', 'error');
+        return;
+    }
+
+    const replyForm = document.getElementById(`replyForm-${postId}`);
+    const replyInput = replyForm.querySelector('.reply-input');
     const content = replyInput.value.trim();
     
     if (!content) {
-        showMessage('请输入回复内容 ✍️', 'warning');
+        showMessage('回复内容不能为空 😅', 'warning');
         return;
     }
     
-    try {
-        const reply = {
-            content,
-            user: document.getElementById('user').value,
-            timestamp: firebase.firestore.Timestamp.fromDate(new Date()),
-            postId
-        };
-        
-        await db.collection('replies').add(reply);
-        replyInput.value = '';
-        document.getElementById(`reply-form-${postId}`).style.display = 'none';
-        showMessage('回复成功 🎉', 'success');
-        
-        // 刷新并显示回复
-        await loadReplies(postId);
-        document.getElementById(`replies-${postId}`).style.display = 'block';
-        
-    } catch (error) {
-        console.error('回复失败:', error);
-        showMessage('回复失败 😢', 'error');
+    const reply = {
+        content: content,
+        user: currentUser,
+        timestamp: firebase.firestore.Timestamp.now()
+    };
+    
+    db.collection('posts').doc(postId)
+        .collection('replies')
+        .add(reply)
+        .then(() => {
+            replyInput.value = '';
+            replyForm.style.display = 'none';
+            loadReplies(postId);
+            showMessage('回复成功 ✨', 'success');
+        })
+        .catch(error => {
+            console.error('回复失败:', error);
+            showMessage('回复失败，请重试 😢', 'error');
+        });
+}
+
+// 切换嵌套回复表单
+function toggleNestedReplyForm(postId, replyId, level = 2) {
+    const replyContainer = document.querySelector(`[data-reply-id="${replyId}"]`);
+    let nestedReplyForm = document.getElementById(`nestedReplyForm-${replyId}`);
+    
+    if (!nestedReplyForm) {
+        nestedReplyForm = document.createElement('div');
+        nestedReplyForm.id = `nestedReplyForm-${replyId}`;
+        nestedReplyForm.className = 'nested-reply-form';
+        nestedReplyForm.innerHTML = `
+            <textarea class="reply-input" placeholder="写下你的回复..."></textarea>
+            <button class="reply-submit-btn" onclick="submitNestedReply('${postId}', '${replyId}')">
+                <i class="fas fa-paper-plane"></i> 发送
+            </button>
+        `;
+        replyContainer.appendChild(nestedReplyForm);
+    } else {
+        nestedReplyForm.style.display = nestedReplyForm.style.display === 'none' ? 'block' : 'none';
     }
+}
+
+// 提交嵌套回复
+function submitNestedReply(postId, replyId) {
+    if (!currentUser) {
+        showMessage('请先选择用户身份 😅', 'error');
+        return;
+    }
+
+    const nestedReplyForm = document.getElementById(`nestedReplyForm-${replyId}`);
+    const replyInput = nestedReplyForm.querySelector('.reply-input');
+    const content = replyInput.value.trim();
+    
+    if (!content) {
+        showMessage('回复内容不能为空 😅', 'warning');
+        return;
+    }
+    
+    const nestedReply = {
+        content: content,
+        user: currentUser,
+        timestamp: firebase.firestore.Timestamp.now()
+    };
+    
+    db.collection('posts').doc(postId)
+        .collection('replies').doc(replyId)
+        .collection('nested-replies')
+        .add(nestedReply)
+        .then(() => {
+            replyInput.value = '';
+            nestedReplyForm.style.display = 'none';
+            loadNestedReplies(postId, replyId);
+            showMessage('回复成功 ✨', 'success');
+        })
+        .catch(error => {
+            console.error('回复失败:', error);
+            showMessage('回复失败，请重试 😢', 'error');
+        });
+}
+
+// 删除回复
+function deleteReply(postId, replyId) {
+    // 先获取回复数据进行权限验证
+    db.collection('posts').doc(postId)
+        .collection('replies').doc(replyId)
+        .get()
+        .then(doc => {
+            if (doc.exists && doc.data().user === currentUser) {
+                if (confirm('确定要删除这条回复吗？')) {
+                    db.collection('posts').doc(postId)
+                        .collection('replies').doc(replyId)
+                        .delete()
+                        .then(() => {
+                            loadReplies(postId);
+                            showMessage('删除成功 🗑️', 'success');
+                        })
+                        .catch(error => {
+                            console.error('删除失败:', error);
+                            showMessage('删除失败，请重试 😢', 'error');
+                        });
+                }
+            } else {
+                showMessage('你没有权限删除这条回复 😅', 'error');
+            }
+        });
+}
+
+// 删除嵌套回复
+function deleteNestedReply(postId, parentId, replyId) {
+    // 先获取嵌套回复数据进行权限验证
+    db.collection('posts').doc(postId)
+        .collection('replies').doc(parentId)
+        .collection('nested-replies').doc(replyId)
+        .get()
+        .then(doc => {
+            if (doc.exists && doc.data().user === currentUser) {
+                if (confirm('确定要删除这条回复吗？')) {
+                    db.collection('posts').doc(postId)
+                        .collection('replies').doc(parentId)
+                        .collection('nested-replies').doc(replyId)
+                        .delete()
+                        .then(() => {
+                            loadNestedReplies(postId, parentId);
+                            showMessage('删除成功 🗑️', 'success');
+                        })
+                        .catch(error => {
+                            console.error('删除失败:', error);
+                            showMessage('删除失败，请重试 😢', 'error');
+                        });
+                }
+            } else {
+                showMessage('你没有权限删除这条回复 😅', 'error');
+            }
+        });
 }
 
 // 加载回复
-async function loadReplies(postId) {
-    const repliesDiv = document.getElementById(`replies-${postId}`);
-    
-    if (!repliesDiv) {
-        console.warn(`等待回复容器: replies-${postId}`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return loadReplies(postId);
-    }
-    
-    try {
-        const snapshot = await db.collection('replies')
-            .where('postId', '==', postId)
-            .orderBy('timestamp', 'desc')
-            .get();
-        
-        let repliesHtml = '';
-        
-        if (!snapshot.empty) {
-            repliesHtml = snapshot.docs.map(doc => {
-                const reply = doc.data();
-                const replyId = doc.id;
-                const replyUserHtml = `<span class="reply-user">${reply.user}</span>`;
-                const replyTimeHtml = `<span class="reply-time">${formatDate(reply.timestamp, true)}</span>`;
-                return `
-                    <div class="reply-item" data-user="${reply.user}" data-reply-id="${replyId}">
-                        <div class="reply-header">
-                            ${replyUserHtml}
-                            ${replyTimeHtml}
-                        </div>
-                        <div class="reply-content">
-                            ${reply.content}
-                        </div>
-                        <div class="reply-actions">
-                            <button class="nested-reply-btn" onclick="toggleNestedReplyForm('${replyId}', '${postId}')">
-                                <i class="fas fa-reply"></i> 回复
-                            </button>
-                            <button class="reply-delete-btn" onclick="deleteReply('${replyId}', '${postId}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                        <div class="nested-reply-form-wrapper" id="nested-reply-form-${replyId}" style="display: none;">
-                            <div class="nested-reply-form">
-                                <textarea class="nested-reply-input" id="nested-reply-input-${replyId}" placeholder="回复这条评论..."></textarea>
-                                <div class="nested-reply-actions">
-                                    <button class="nested-reply-submit" onclick="submitNestedReply('${replyId}', '${postId}')">
-                                        <i class="fas fa-paper-plane"></i> 发送
-                                    </button>
-                                    <button class="nested-reply-cancel" onclick="toggleNestedReplyForm('${replyId}', '${postId}')">
-                                        <i class="fas fa-times"></i> 取消
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="nested-replies" id="nested-replies-${replyId}"></div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        repliesDiv.innerHTML = repliesHtml || '';
-        
-        // 加载每条回复的嵌套回复
-        if (!snapshot.empty) {
-            for (const doc of snapshot.docs) {
-                await loadNestedReplies(doc.id);
+function loadReplies(postId) {
+    const repliesContainer = document.getElementById(`replies-${postId}`);
+    if (!repliesContainer) return;
+
+    db.collection('posts').doc(postId).collection('replies')
+        .orderBy('timestamp', 'asc')
+        .get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                repliesContainer.innerHTML = '';
+                return;
             }
-        }
-        
-    } catch (error) {
-        console.error('加载回复失败:', error);
-        repliesDiv.innerHTML = '<div class="reply-error">加载回复失败，请稍后重试</div>';
-    }
-}
 
-// 修改切换嵌套回复表单的函数
-function toggleNestedReplyForm(replyId, postId) {
-    console.log('切换嵌套回复表单:', replyId, postId);
-    
-    // 先关闭所有其他打开的回复表单
-    document.querySelectorAll('.nested-reply-form-wrapper').forEach(form => {
-        if (form.id !== `nested-reply-form-${replyId}`) {
-            form.style.display = 'none';
-        }
-    });
-    
-    const formWrapper = document.getElementById(`nested-reply-form-${replyId}`);
-    if (!formWrapper) {
-        console.error('找不到嵌套回复表单容器:', replyId);
-        return;
-    }
-    
-    const isHidden = formWrapper.style.display === 'none';
-    formWrapper.style.display = isHidden ? 'block' : 'none';
-    
-    if (isHidden) {
-        const input = document.getElementById(`nested-reply-input-${replyId}`);
-        if (input) {
-            input.focus();
-            // 存储当前回复的上下文
-            input.dataset.replyId = replyId;
-            input.dataset.postId = postId;
-        }
-    }
-}
-
-// 修改提交嵌套回复的函数
-async function submitNestedReply(parentReplyId, postId) {
-    const input = document.getElementById(`nested-reply-input-${parentReplyId}`);
-    if (!input) {
-        console.error('找不到输入框');
-        return;
-    }
-    
-    const content = input.value.trim();
-    if (!content) {
-        showMessage('请输入回复内容 ✍️', 'warning');
-        return;
-    }
-    
-    try {
-        const nestedReply = {
-            content,
-            user: document.getElementById('user').value,
-            timestamp: firebase.firestore.Timestamp.fromDate(new Date()),
-            parentReplyId,
-            postId
-        };
-        
-        await db.collection('nested_replies').add(nestedReply);
-        input.value = '';
-        
-        // 隐藏表单
-        const formWrapper = document.getElementById(`nested-reply-form-${parentReplyId}`);
-        if (formWrapper) {
-            formWrapper.style.display = 'none';
-        }
-        
-        showMessage('回复成功 🎉', 'success');
-        
-        // 刷新嵌套回复显示
-        await loadNestedReplies(parentReplyId);
-        
-    } catch (error) {
-        console.error('回复失败:', error);
-        showMessage('回复失败，请重试 😢', 'error');
-    }
-}
-
-// 修改加载嵌套回复的函数
-async function loadNestedReplies(parentReplyId) {
-    const nestedRepliesDiv = document.getElementById(`nested-replies-${parentReplyId}`);
-    
-    if (!nestedRepliesDiv) {
-        console.warn(`等待嵌套回复容器: nested-replies-${parentReplyId}`);
-        return;
-    }
-    
-    try {
-        let snapshot;
-        try {
-            // 尝试使用排序的查询
-            snapshot = await db.collection('nested_replies')
-                .where('parentReplyId', '==', parentReplyId)
-                .orderBy('timestamp', 'asc')
-                .get();
-        } catch (error) {
-            if (error.code === 'failed-precondition') {
-                // 如果索引不存在，使用不带排序的查询
-                console.warn('需要创建索引，暂时使用未排序的查询');
-                console.log('索引创建链接:', error.message.split('You can create it here: ')[1]);
-                
-                snapshot = await db.collection('nested_replies')
-                    .where('parentReplyId', '==', parentReplyId)
-                    .get();
-            } else {
-                throw error;
-            }
-        }
-        
-        if (!snapshot.empty) {
-            let replies = snapshot.docs.map(doc => ({
+            const replies = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            
-            // 如果使用了未排序的查询，手动排序
-            if (!snapshot.query?._query?.orderBy) {
-                replies.sort((a, b) => {
-                    const timeA = a.timestamp?.toMillis() || 0;
-                    const timeB = b.timestamp?.toMillis() || 0;
-                    return timeA - timeB;
-                });
-            }
-            
-            const nestedRepliesHtml = replies.map(reply => {
-                const replyUserHtml = `<span class="reply-user">${reply.user}</span>`;
-                const replyTimeHtml = `<span class="reply-time">${formatDate(reply.timestamp, true)}</span>`;
+
+            const repliesHtml = replies.map(reply => {
+                const userEmoji = reply.user === '晁森豪' ? '🤴' : '👸';
+                const isCurrentUser = reply.user === currentUser;
+
                 return `
-                    <div class="nested-reply" data-user="${reply.user}">
+                    <div class="reply" data-reply-id="${reply.id}">
                         <div class="reply-header">
-                            ${replyUserHtml}
-                            ${replyTimeHtml}
+                            <span class="reply-user">${reply.user} ${userEmoji}</span>
+                            <span class="reply-time">${formatTime(reply.timestamp)}</span>
+                            ${isCurrentUser ? `
+                                <button class="delete-reply-btn" onclick="deleteReply('${postId}', '${reply.id}')" title="删除">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            ` : ''}
                         </div>
-                        <div class="reply-content">
-                            ${reply.content}
-                        </div>
-                        <div class="reply-actions">
-                            <button class="nested-reply-btn" onclick="toggleNestedReplyForm('${reply.id}', '${reply.postId}')">
-                                <i class="fas fa-reply"></i> 回复
-                            </button>
-                            <button class="reply-delete-btn" onclick="deleteNestedReply('${reply.id}', '${reply.parentReplyId}', '${reply.postId}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                        <div class="nested-reply-form-wrapper" id="nested-reply-form-${reply.id}" style="display: none;">
-                            <div class="nested-reply-form">
-                                <textarea class="nested-reply-input" id="nested-reply-input-${reply.id}" placeholder="回复这条评论..."></textarea>
-                                <div class="nested-reply-actions">
-                                    <button class="nested-reply-submit" onclick="submitNestedReply('${reply.id}', '${reply.postId}')">
-                                        <i class="fas fa-paper-plane"></i> 发送
-                                    </button>
-                                    <button class="nested-reply-cancel" onclick="toggleNestedReplyForm('${reply.id}', '${reply.postId}')">
-                                        <i class="fas fa-times"></i> 取消
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="reply-content">${reply.content}</div>
+                        <button class="nested-reply-btn" onclick="toggleNestedReplyForm('${postId}', '${reply.id}', 2)">
+                            <i class="fas fa-reply"></i> 回复
+                        </button>
                         <div class="nested-replies" id="nested-replies-${reply.id}"></div>
                     </div>
                 `;
             }).join('');
-            
-            nestedRepliesDiv.innerHTML = nestedRepliesHtml;
-            
-            // 加载每条嵌套回复的子回复
-            for (const reply of replies) {
-                await loadNestedReplies(reply.id);
-            }
-        } else {
-            nestedRepliesDiv.innerHTML = '';
-        }
-        
-    } catch (error) {
-        console.error('加载嵌套回复失败:', error);
-        nestedRepliesDiv.innerHTML = '<div class="reply-error">加载嵌套回复失败</div>';
-    }
-}
 
-// 添加删除回复的函数
-async function deleteReply(replyId, postId) {
-    if (!confirm('确定要删除这条回复吗？')) return;
-    
-    try {
-        // 删除回复
-        await db.collection('replies').doc(replyId).delete();
-        
-        // 删除该回复下的所有嵌套回复
-        const nestedRepliesSnapshot = await db.collection('nested_replies')
-            .where('parentReplyId', '==', replyId)
-            .get();
-            
-        const batch = db.batch();
-        nestedRepliesSnapshot.docs.forEach(doc => {
-            batch.delete(doc.ref);
+            repliesContainer.innerHTML = repliesHtml;
+
+            // 加载每条回复的二级回复
+            replies.forEach(reply => {
+                loadNestedReplies(postId, reply.id, 2);
+            });
         });
-        await batch.commit();
-        
-        showMessage('删除成功 🗑️', 'success');
-        
-        // 重新加载回复
-        await loadReplies(postId);
-        
-    } catch (error) {
-        console.error('删除回复失败:', error);
-        showMessage('删除失败 😢', 'error');
-    }
 }
 
-// 添加删除嵌套回复的函数
-async function deleteNestedReply(nestedReplyId, parentReplyId, postId) {
-    if (!confirm('确定要删除这条回复吗？')) return;
-    
-    try {
-        await db.collection('nested_replies').doc(nestedReplyId).delete();
-        showMessage('删除成功 🗑️', 'success');
-        
-        // 重新加载嵌套回复
-        await loadNestedReplies(parentReplyId);
-        
-    } catch (error) {
-        console.error('删除嵌套回复失败:', error);
-        showMessage('删除失败 😢', 'error');
-    }
+// 修改 loadNestedReplies 函数以支持无限嵌套
+function loadNestedReplies(postId, parentId, level = 1) {
+    const container = document.getElementById(`nested-replies-${parentId}`);
+    if (!container) return;
+
+    const collectionPath = `posts/${postId}/replies/${parentId}/nested-replies`;
+
+    db.collection(collectionPath)
+        .orderBy('timestamp', 'asc')
+        .get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const nestedReplies = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            const nestedRepliesHtml = nestedReplies.map(reply => {
+                const userEmoji = reply.user === '晁森豪' ? '🤴' : '👸';
+                const isCurrentUser = reply.user === currentUser;
+
+                return `
+                    <div class="nested-reply level-${level}" data-reply-id="${reply.id}">
+                        <div class="reply-header">
+                            <span class="reply-user">${reply.user} ${userEmoji}</span>
+                            <span class="reply-time">${formatTime(reply.timestamp)}</span>
+                            ${isCurrentUser ? `
+                                <button class="delete-reply-btn" onclick="deleteNestedReply('${postId}', '${parentId}', '${reply.id}')" title="删除">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="reply-content">${reply.content}</div>
+                        <button class="nested-reply-btn" onclick="toggleNestedReplyForm('${postId}', '${reply.id}', ${level + 1})">
+                            <i class="fas fa-reply"></i> 回复
+                        </button>
+                        <div class="nested-replies" id="nested-replies-${reply.id}"></div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = nestedRepliesHtml;
+
+            // 递归加载每条回复的嵌套回复
+            nestedReplies.forEach(reply => {
+                loadNestedReplies(postId, reply.id, level + 1);
+            });
+        });
 }
 
 // 初始化语音录制功能
@@ -1059,9 +981,9 @@ async function uploadVoice(voiceBlob) {
 // 添加图片压缩函数
 async function compressImage(file) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 1200; // 最大宽度
-        const maxHeight = 1200; // 最大高度
-        const maxSizeMB = 1; // 最大文件大小（MB）
+        const maxWidth = 1200;
+        const maxHeight = 1200;
+        const maxSizeMB = 1;
         
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -1080,16 +1002,13 @@ async function compressImage(file) {
                     height *= ratio;
                 }
                 
-                // 创建 canvas
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
                 
-                // 绘制图片
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // 压缩图片
                 let quality = 0.8;
                 let base64 = canvas.toDataURL('image/jpeg', quality);
                 
@@ -1112,7 +1031,7 @@ async function compressImage(file) {
 async function uploadImage(file) {
     try {
         // 检查文件大小
-        if (file.size > 5 * 1024 * 1024) { // 5MB
+        if (file.size > 2 * 1024 * 1024) { // 2MB
             showMessage('图片太大，正在压缩...', 'info');
             const compressedImage = await compressImage(file);
             return compressedImage;
@@ -1122,11 +1041,271 @@ async function uploadImage(file) {
         const reader = new FileReader();
         return new Promise((resolve, reject) => {
             reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(new Error('图片读取失败'));
+            reader.onerror = () => {
+                console.error('图片读取失败:', reader.error);
+                reject(new Error('图片读取失败'));
+            };
             reader.readAsDataURL(file);
         });
     } catch (error) {
         console.error('图片处理失败:', error);
+        showMessage('图片处理失败，请重试 📸', 'error');
         throw new Error('图片处理失败');
     }
+}
+
+// 添加生成缩略图函数
+async function generateThumbnail(imageUrl, maxWidth = 300, maxHeight = 300) {
+    // 检查缓存
+    const cacheKey = `thumb_${imageUrl}_${maxWidth}_${maxHeight}`;
+    if (imageCache.has(cacheKey)) {
+        return imageCache.get(cacheKey);
+    }
+    
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width *= ratio;
+                height *= ratio;
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const thumbnail = canvas.toDataURL('image/jpeg', 0.5);
+            // 缓存缩略图
+            imageCache.set(cacheKey, thumbnail);
+            resolve(thumbnail);
+        };
+        img.src = imageUrl;
+    });
+}
+
+// 修改 renderImages 函数，优化图片加载
+function renderImages(images, container) {
+    if (!images || !images.length) return '';
+    
+    const imageElements = images.map((imageUrl, index) => {
+        // 生成唯一ID
+        const imageId = `image-${Date.now()}-${index}`;
+        
+        // 使用 IntersectionObserver 优化图片加载
+        setTimeout(() => {
+            const imgEl = document.getElementById(imageId);
+            if (imgEl) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            generateThumbnail(imageUrl).then(thumbnail => {
+                                imgEl.src = thumbnail;
+                                imgEl.dataset.fullImage = imageUrl;
+                                
+                                // 添加点击事件
+                                imgEl.addEventListener('click', function() {
+                                    const modal = document.getElementById('imagePreviewModal');
+                                    const modalImg = document.getElementById('previewImage');
+                                    modalImg.src = thumbnail;
+                                    modal.style.display = 'block';
+                                    
+                                    // 加载原图
+                                    const fullImg = new Image();
+                                    fullImg.onload = function() {
+                                        modalImg.src = imageUrl;
+                                    };
+                                    fullImg.src = imageUrl;
+                                });
+                                
+                                observer.disconnect();
+                            });
+                        }
+                    });
+                });
+                
+                observer.observe(imgEl);
+            }
+        }, 0);
+        
+        return `<img id="${imageId}" class="timeline-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="加载中...">`;
+    }).join('');
+    
+    return `<div class="image-container">${imageElements}</div>`;
+}
+
+// 添加图片预览模态框的关闭事件
+document.querySelector('.close-modal').addEventListener('click', function() {
+    document.getElementById('imagePreviewModal').style.display = 'none';
+});
+
+// 添加 formatTime 函数
+function formatTime(timestamp) {
+    if (timestamp instanceof firebase.firestore.Timestamp) {
+        timestamp = timestamp.toDate();
+    }
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+    return new Intl.DateTimeFormat('zh-CN', options).format(timestamp);
+}
+
+// 添加加载提示函数
+function showLoadingIndicator(show = true) {
+    let loadingEl = document.querySelector('.loading-more');
+    if (!loadingEl) {
+        loadingEl = document.createElement('div');
+        loadingEl.className = 'loading-more';
+        loadingEl.innerHTML = '加载更多内容... 🌈';
+        document.querySelector('.timeline').appendChild(loadingEl);
+    }
+    loadingEl.style.display = show ? 'block' : 'none';
+}
+
+// 修改无限滚动的实现
+function setupInfiniteScroll() {
+    const timelineWrapper = document.querySelector('.timeline-wrapper');
+    let isLoading = false;
+    let scrollTimeout = null;
+    
+    timelineWrapper.addEventListener('scroll', () => {
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+        }
+        
+        scrollTimeout = setTimeout(() => {
+            const { scrollTop, scrollHeight, clientHeight } = timelineWrapper;
+            const threshold = 100; // 滚动阈值
+            
+            if (scrollHeight - scrollTop - clientHeight < threshold && !isLoading && lastVisiblePost) {
+                isLoading = true;
+                currentPage++;
+                
+                // 显示加载提示
+                showLoadingIndicator(true);
+                
+                loadPosts(lastVisiblePost)
+                    .then(() => {
+                        isLoading = false;
+                        // 隐藏加载提示
+                        showLoadingIndicator(false);
+                    })
+                    .catch(() => {
+                        isLoading = false;
+                        currentPage--;
+                        // 隐藏加载提示
+                        showLoadingIndicator(false);
+                    });
+            }
+        }, 150);
+    });
+}
+
+// 在初始化时调用
+setupInfiniteScroll();
+
+// 添加实时更新处理
+function handleRealtimeUpdate(change) {
+    console.log('收到实时更新:', change);
+    
+    // 更新缓存
+    postCache.clear(); // 清除缓存，强制重新加载
+    
+    // 重新加载数据
+    currentPage = 1;
+    loadPosts();
+}
+
+// 添加网络状态监听
+function setupNetworkListener() {
+    let isReconnecting = false;
+
+    // 监听在线状态
+    window.addEventListener('online', () => {
+        console.log('网络已连接');
+        showMessage('网络已恢复 🌐', 'success');
+        if (!isReconnecting) {
+            isReconnecting = true;
+            // 重新加载数据
+            loadPosts()
+                .then(() => {
+                    isReconnecting = false;
+                })
+                .catch(() => {
+                    isReconnecting = false;
+                });
+        }
+    });
+
+    window.addEventListener('offline', () => {
+        console.log('网络已断开');
+        showMessage('网络已断开，将使用离线数据 📴', 'warning');
+    });
+}
+
+// 在初始化时调用
+setupNetworkListener();
+
+// 添加身份选择功能
+function selectUser(username) {
+    currentUser = username;
+    
+    // 切换显示
+    const modalEl = document.getElementById('userSelectModal');
+    const containerEl = document.querySelector('.container');
+    
+    modalEl.style.display = 'none';
+    containerEl.style.display = 'block';
+    
+    // 显示欢迎消息
+    showMessage(`欢迎回来，${username} ${username === '晁森豪' ? '🤴' : '👸'}`, 'success');
+    
+    // 初始化应用
+    initializeApp();
+}
+
+// 修改初始化应用函数
+function initializeApp() {
+    console.log('页面加载完成，初始化...');
+    
+    // 初始化数据库连接
+    initializeDatabase();
+    
+    // 设置实时更新之前先加载数据
+    loadPosts().then(() => {
+        console.log('初始数据加载完成');
+        // 设置实时更新
+        setupRealtimeUpdates();
+    }).catch(error => {
+        console.error('初始数据加载失败:', error);
+    });
+    
+    // 监听网络状态
+    window.addEventListener('online', () => {
+        console.log('网络已连接');
+        showMessage('网络已连接 🌐', 'success');
+        loadPosts();
+    });
+
+    window.addEventListener('offline', () => {
+        console.log('网络已断开');
+        showMessage('网络已断开，使用离线数据 ⚠️', 'error');
+    });
+    
+    // 添加图片上传监听器
+    document.getElementById('image').addEventListener('change', handleImageUpload);
+    
+    // 添加表单提交监听器
+    document.getElementById('post-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitPost();
+    });
+    
+    setupFilters();
+    initVoiceRecording();
 }
