@@ -2785,3 +2785,29 @@ audio {
     font-size: var(--base-font-size) !important;
     text-align: center;
 }
+
+/* 增加选择器优先级 */
+.container .module-container:first-child .module-wrapper {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.container .module-wrapper .main-title {
+    text-align: center !important;
+    width: 100% !important;
+    color: var(--primary) !important;
+    margin: 0 !important;
+    font-size: calc(var(--base-font-size) * 1.8) !important;
+    font-weight: 700 !important;
+}
+
+.container .module-wrapper .subtitle {
+    text-align: center !important;
+    width: 100% !important;
+    color: var(--text-light) !important;
+    margin: 8px 0 0 !important;
+    font-size: var(--base-font-size) !important;
+}
