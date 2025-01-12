@@ -53,71 +53,87 @@ function withRetry(operation, maxRetries = 3, delay = 1000) {
     });
 }
 
-// 修改 loadPosts 函数
-async function loadPosts(lastTimestamp = null, limit = POSTS_PER_PAGE) {
-    console.log('开始加载帖子...');
-    
+// 修改加载帖子函数
+async function loadPosts(lastTimestamp = null) {
     const timelineEl = document.querySelector('.timeline');
-    if (currentPage === 1) {
-        timelineEl.innerHTML = '<div class="loading-indicator">加载中... 💫</div>';
-    }
+    
+    // 移除已有的加载提示
+    const existingIndicators = timelineEl.querySelectorAll('.loading-indicator');
+    existingIndicators.forEach(indicator => indicator.remove());
+    
+    // 记录当前滚动位置
+    const scrollPosition = window.scrollY;
+    
+    // 创建加载提示
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.textContent = '正在加载内容... 📃';
+    loadingIndicator.style.height = '50px';
+    timelineEl.appendChild(loadingIndicator);
     
     try {
-        const result = await withRetry(async () => {
-            let query = db.collection('posts')
-                .orderBy('timestamp', 'desc')
-                .limit(limit);
-            
-            if (lastTimestamp) {
-                query = query.startAfter(lastTimestamp);
-            }
-            
-            const snapshot = await query.get();
-            
-            if (snapshot.empty) {
-                if (currentPage === 1) {
-                    timelineEl.innerHTML = '<div class="timeline-empty">还没有任何记录哦 ✨</div>';
-                }
-                return { posts: [], hasMore: false };
-            }
-            
-            const posts = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            if (currentPage === 1) {
-                timelineData = [...posts];
-            } else {
-                const newPosts = posts.filter(post => 
-                    !timelineData.some(existing => existing.id === post.id)
-                );
-                timelineData = [...timelineData, ...newPosts];
-            }
-            
-            lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
-            
-            requestAnimationFrame(() => {
-                renderTimeline(currentPage > 1);
-            });
-            
-            return {
-                posts,
-                hasMore: posts.length === limit
-            };
-        });
+        let query = db.collection('posts')
+            .orderBy('timestamp', 'desc')
+            .limit(5);
         
-        return result;
-    } catch (error) {
-        console.error('加载帖子失败:', error);
-        showMessage('加载失败，请检查网络连接后重试 🔄', 'error');
-        
-        // 如果有缓存数据，显示缓存数据
-        if (timelineData.length > 0) {
-            showMessage('显示缓存数据 📱', 'info');
-            renderTimeline();
+        if (lastTimestamp) {
+            query = query.startAfter(lastTimestamp);
         }
         
+        const snapshot = await query.get();
+        
+        if (snapshot.empty) {
+            loadingIndicator.textContent = lastTimestamp ? '已经到底啦 🎈' : '还没有任何记录哦 ✨';
+            setTimeout(() => {
+                loadingIndicator.style.opacity = '0';
+                setTimeout(() => loadingIndicator.remove(), 300);
+            }, 2000);
+            return { posts: [], hasMore: false };
+        }
+        
+        const posts = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+        
+        // 更新数据
+        if (!lastTimestamp) {
+            timelineData = posts;
+        } else {
+            timelineData = [...timelineData, ...posts];
+        }
+        
+        // 使用原有的渲染函数，但在 requestAnimationFrame 中执行
+        requestAnimationFrame(() => {
+            renderTimeline(); // 使用原有的渲染函数
+            
+            // 如果还有更多内容，添加提示
+            if (posts.length === 5) {
+                const moreIndicator = document.createElement('div');
+                moreIndicator.className = 'loading-indicator';
+                moreIndicator.textContent = '上滑加载更多 ⬆️';
+                moreIndicator.style.height = '50px';
+                timelineEl.appendChild(moreIndicator);
+            }
+            
+            // 恢复滚动位置
+            window.scrollTo(0, scrollPosition);
+        });
+        
+        return {
+            posts,
+            hasMore: posts.length === 5
+        };
+        
+    } catch (error) {
+        console.error('加载帖子失败:', error);
+        loadingIndicator.textContent = '加载失败，请重试 😢';
+        setTimeout(() => {
+            loadingIndicator.style.opacity = '0';
+            setTimeout(() => loadingIndicator.remove(), 300);
+        }, 2000);
         return { posts: [], hasMore: false };
     }
 }
@@ -151,7 +167,40 @@ function renderTimeline() {
         return;
     }
 
+    // 按时间倒序排序
+    timelineData.sort((a, b) => {
+        const timeA = a.timestamp instanceof firebase.firestore.Timestamp ? a.timestamp.toDate() : new Date(a.timestamp);
+        const timeB = b.timestamp instanceof firebase.firestore.Timestamp ? b.timestamp.toDate() : new Date(b.timestamp);
+        return timeB - timeA; // 倒序排列
+    });
+
+    // 按日期分组
+    let currentDate = null;
     const html = timelineData.map(post => {
+        const postDate = post.timestamp instanceof firebase.firestore.Timestamp 
+            ? post.timestamp.toDate() 
+            : new Date(post.timestamp);
+        
+        const dateStr = formatDate(postDate, false);
+        let dateDivider = '';
+        
+        if (dateStr !== currentDate) {
+            currentDate = dateStr;
+            const year = postDate.getFullYear();
+            const month = String(postDate.getMonth() + 1).padStart(2, '0');
+            const day = String(postDate.getDate()).padStart(2, '0');
+            
+            dateDivider = `
+                <div class="date-divider">
+                    <span>
+                        <span class="year">${year}</span>年
+                        <span class="month">${month}</span>月
+                        <span class="day">${day}</span>日
+                    </span>
+                </div>
+            `;
+        }
+
         // 获取表情
         const moodEmoji = getMoodEmoji(post.mood);
         const userEmoji = post.user === '晁森豪' ? '🤴' : '👸';
@@ -174,14 +223,14 @@ function renderTimeline() {
             </button>
         ` : '';
 
-        return `
+        const postHtml = `
             <div class="timeline-item" data-user="${post.user}">
                 <div class="timeline-header">
-                    <div class="timeline-user" style="font-size: calc(var(--base-font-size) * 0.84) !important;">
+                    <div class="timeline-user" style="font-size: calc(var(--base-font-size) * 0.64) !important;">
                         <span>${userEmoji}</span>
                         <span>${post.user}</span>
                     </div>
-                    <div class="timeline-date" style="font-size: calc(var(--base-font-size) * 0.84) !important;">
+                    <div class="timeline-date" style="font-size: calc(var(--base-font-size) * 0.64) !important;">
                         <i class="far fa-clock"></i>
                         <span>${formatTime(post.timestamp)}</span>
                         ${deleteButton}
@@ -191,7 +240,7 @@ function renderTimeline() {
                     <div class="timeline-mood" ${post.mood ? `data-mood="${post.mood}"` : ''}>
                         ${post.mood ? `<span>${moodEmoji}</span><span>${post.mood}</span>` : ''}
                     </div>
-                    <div class="timeline-text" style="font-size: calc(var(--base-font-size) * 0.91) !important;">
+                    <div class="timeline-text" style="font-size: calc(var(--base-font-size) * 0.64) !important;">
                         ${post.content}
                     </div>
                     ${imageContent}
@@ -213,10 +262,12 @@ function renderTimeline() {
                 </div>
             </div>
         `;
+
+        return dateDivider + postHtml;
     }).join('');
 
     timelineEl.innerHTML = html;
-
+    
     // 加载每个帖子的回复
     timelineData.forEach(post => {
         loadReplies(post.id);
@@ -254,66 +305,53 @@ function initializeDatabase() {
 
 // 修改 setupRealtimeUpdates 函数
 function setupRealtimeUpdates() {
-    console.log('设置实时更新监听...');
-    
-    let unsubscribe = db.collection('posts')
+    const query = db.collection('posts')
         .orderBy('timestamp', 'desc')
-        .onSnapshot(snapshot => {
-            const changes = snapshot.docChanges();
-            console.log('收到实时更新:', changes.length, '条变更');
-            
-            changes.forEach(change => {
-                const post = {
-                    id: change.doc.id,
-                    ...change.doc.data()
-                };
-                
-                if (change.type === 'added') {
-                    if (!timelineData.some(p => p.id === post.id)) {
-                        timelineData.unshift(post);
-                        requestAnimationFrame(() => {
-                            renderTimeline(true);
-                        });
-                    }
-                }
-                
-                if (change.type === 'modified') {
-                    console.log('修改帖子:', post);
-                    const index = timelineData.findIndex(p => p.id === post.id);
-                    if (index !== -1) {
-                        timelineData[index] = post;
-                        requestAnimationFrame(() => {
-                            renderTimeline(true);
-                        });
-                    }
-                }
-                
-                if (change.type === 'removed') {
-                    console.log('删除帖子:', post);
-                    const index = timelineData.findIndex(p => p.id === post.id);
-                    if (index !== -1) {
-                        timelineData.splice(index, 1);
-                        requestAnimationFrame(() => {
-                            renderTimeline(true);
-                        });
-                    }
-                }
-            });
-        }, error => {
-            console.error('监听更新失败:', error);
-            showMessage('实时更新连接失败，将每30秒自动重试 🔄', 'warning');
-            
-            // 30秒后重试
-            setTimeout(() => {
-                unsubscribe && unsubscribe();
-                setupRealtimeUpdates();
-            }, 30000);
-        });
+        .limit(5); // 只监听最新的5条
         
+    query.onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+            const post = {
+                id: change.doc.id,
+                ...change.doc.data()
+            };
+            
+            if (change.type === 'added') {
+                if (!timelineData.some(p => p.id === post.id)) {
+                    timelineData.unshift(post);
+                    requestAnimationFrame(() => {
+                        renderTimeline(true);
+                    });
+                }
+            }
+            
+            if (change.type === 'modified') {
+                console.log('修改帖子:', post);
+                const index = timelineData.findIndex(p => p.id === post.id);
+                if (index !== -1) {
+                    timelineData[index] = post;
+                    requestAnimationFrame(() => {
+                        renderTimeline(true);
+                    });
+                }
+            }
+            
+            if (change.type === 'removed') {
+                console.log('删除帖子:', post);
+                const index = timelineData.findIndex(p => p.id === post.id);
+                if (index !== -1) {
+                    timelineData.splice(index, 1);
+                    requestAnimationFrame(() => {
+                        renderTimeline(true);
+                    });
+                }
+            }
+        });
+    });
+    
     // 添加网络状态监听
     window.addEventListener('online', () => {
         showMessage('网络已恢复，重新连接... 🌐', 'success');
-        unsubscribe && unsubscribe();
         setupRealtimeUpdates();
     });
 }
@@ -376,74 +414,75 @@ async function submitPost() {
     const content = document.getElementById('content').value.trim();
     const mood = document.getElementById('mood').value;
     const imageFiles = document.getElementById('image').files;
-    const loadingEl = document.getElementById('loading');
-    const voicePreview = document.getElementById('voicePreview');
-    
-    if (!content) {
-        showMessage('请输入内容 ✍️', 'warning');
+    const voiceBlob = audioChunks.length ? new Blob(audioChunks, { type: 'audio/wav' }) : null;
+
+    if (!content && !imageFiles.length && !voiceBlob) {
+        showMessage('请输入内容或上传图片/语音 📝', 'warning');
         return;
     }
 
-    loadingEl.style.display = 'block';
-    
     try {
-        const post = {
-            content: content,
-            mood: mood,
-            user: currentUser, // 使用当前用户
-            timestamp: firebase.firestore.Timestamp.fromDate(new Date()),
-            date: new Date().toISOString().split('T')[0]
-        };
+        document.getElementById('loading').style.display = 'block';
+        showMessage('正在处理内容...', 'info');
 
-        // 处理图片上传
+        // 处理图片，添加进度提示
+        let images = [];
         if (imageFiles.length > 0) {
-            showMessage('正在上传图片...', 'info');
-            const images = [];
-            for (const file of imageFiles) {
-                try {
-                    const imageUrl = await uploadImage(file);
-                    images.push(imageUrl);
-                } catch (error) {
-                    console.error('图片上传失败:', error);
-                    showMessage('图片上传失败 😢', 'error');
-                    return;
-                }
+            showMessage(`正在处理图片 (0/${imageFiles.length})...`, 'info');
+            for (let i = 0; i < imageFiles.length; i++) {
+                const compressedImage = await compressImage(imageFiles[i]);
+                images.push(compressedImage);
+                showMessage(`正在处理图片 (${i + 1}/${imageFiles.length})...`, 'info');
             }
-            post.images = images;
         }
-        
+
         // 处理语音
-        if (voicePreview && voicePreview.src && voicePreview.src.startsWith('data:audio')) {
+        let voiceData = null;
+        if (audioChunks && audioChunks.length > 0) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const audioBlob = new Blob(audioChunks, { 
+                type: isIOS ? 'audio/mp4' : 'audio/webm'
+            });
+            
             try {
-                showMessage('正在处理语音...', 'info');
-                post.voice = voicePreview.src;
-                console.log('语音数据已添加到帖子');
+                voiceData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(audioBlob);
+                });
             } catch (error) {
                 console.error('语音处理失败:', error);
-                showMessage('语音处理失败，但会继续发布文字内容 🎤', 'warning');
+                showMessage('语音处理失败，请重试 🎤', 'error');
+                return;
             }
         }
 
-        // 保存帖子到数据库
+        // 创建主帖子
+        const post = {
+            content,
+            user: currentUser,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            mood: mood || null,
+            images: images.length > 0 ? images : null,
+            voice: voiceData // 只存储引用信息
+        };
+
         await db.collection('posts').add(post);
         
         // 清空表单
         document.getElementById('post-form').reset();
         document.getElementById('preview-container').innerHTML = '';
-        if (voicePreview) {
-            voicePreview.src = '';
-            voicePreview.style.display = 'none';
+        audioChunks = [];
+        if (document.getElementById('voicePreview')) {
+            document.getElementById('voicePreview').style.display = 'none';
         }
-        document.querySelector('.voice-timer').style.display = 'none';
-        document.getElementById('recordVoiceBtn').innerHTML = '<i class="fas fa-microphone"></i> 开始录音';
         
         showMessage('发布成功 🎉', 'success');
-        
     } catch (error) {
         console.error('发布失败:', error);
         showMessage('发布失败，请重试 😢', 'error');
     } finally {
-        loadingEl.style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
     }
 }
 
@@ -842,171 +881,226 @@ function loadNestedReplies(postId, parentId, level = 1) {
         });
 }
 
-// 初始化语音录制功能
+// 修改录音相关函数
 async function initVoiceRecording() {
     const recordBtn = document.getElementById('recordVoiceBtn');
-    const timer = document.querySelector('.voice-timer');
-    const voicePreview = document.getElementById('voicePreview');
-
-    recordBtn.addEventListener('click', async () => {
-        if (!mediaRecorder) {
-            try {
-                // 添加 Safari 浏览器的特殊处理
-                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-                if (isSafari) {
-                    showMessage('Safari浏览器需要在设置中允许使用麦克风 🎤\n设置 > Safari > 高级 > 网站设置 > 麦克风', 'warning');
-                }
-
+    let isRecording = false;
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('浏览器不支持录音功能');
+        recordBtn.disabled = true;
+        recordBtn.innerHTML = '<i class="fas fa-microphone-slash"></i> 不支持录音';
+        return;
+    }
+    
+    recordBtn.addEventListener('click', async function() {
+        try {
+            if (!isRecording) {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // 检测设备类型并设置适当的音频格式
+                // 设置适当的音频格式
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                
-                try {
-                    mediaRecorder = new MediaRecorder(stream, {
-                        mimeType: isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus',
-                        audioBitsPerSecond: 128000
-                    });
-                } catch (e) {
-                    // 如果指定格式失败，尝试使用默认格式
-                    console.log('指定格式失败，使用默认格式');
-                    mediaRecorder = new MediaRecorder(stream);
-                }
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: isIOS ? 'audio/mp4' : 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 128000
+                });
                 
                 audioChunks = [];
-
+                
                 mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = async () => {
-                    try {
-                        // 创建音频 Blob
-                        const audioBlob = new Blob(audioChunks, { 
-                            type: 'audio/mpeg' // 使用更通用的格式
-                        });
-                        
-                        // 转换为 Base64
-                        const base64Audio = await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => resolve(reader.result);
-                            reader.readAsDataURL(audioBlob);
-                        });
-
-                        // 预览音频
-                        voicePreview.src = base64Audio;
-                        voicePreview.style.display = 'block';
-                        
-                        // 确保音频加载完成
-                        await new Promise((resolve, reject) => {
-                            voicePreview.onloadeddata = resolve;
-                            voicePreview.onerror = reject;
-                        });
-
-                        console.log('音频加载成功');
-                        showMessage('录音完成 ✅', 'success');
-                        
-                    } catch (error) {
-                        console.error('处理录音数据失败:', error);
-                        showMessage('处理录音失败，请重试 🎤', 'error');
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
                     }
                 };
-
-                mediaRecorder.start();
+                
+                mediaRecorder.onstop = async () => {
+                    // 停止所有音轨
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // 创建音频预览
+                    const audioBlob = new Blob(audioChunks, { 
+                        type: isIOS ? 'audio/mp4' : 'audio/webm'
+                    });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    // 显示预览
+                    const previewContainer = document.createElement('div');
+                    previewContainer.className = 'voice-preview-container';
+                    
+                    const audioPreview = document.createElement('audio');
+                    audioPreview.controls = true;
+                    audioPreview.src = audioUrl;
+                    
+                    // 清除旧的预览
+                    const oldPreview = document.querySelector('.voice-preview-container');
+                    if (oldPreview) {
+                        oldPreview.remove();
+                    }
+                    
+                    previewContainer.appendChild(audioPreview);
+                    recordBtn.parentElement.appendChild(previewContainer);
+                    
+                    stopRecordingTimer();
+                    showMessage('录音完成 ✅', 'success');
+                };
+                
+                // 每秒收集数据
+                mediaRecorder.start(1000);
+                isRecording = true;
                 recordBtn.innerHTML = '<i class="fas fa-stop"></i> 停止录音';
-                recordBtn.classList.add('recording');
-                timer.style.display = 'block';
-                startTimer();
-
-            } catch (error) {
-                console.error('录音失败:', error);
-                showMessage('无法访问麦克风 🎤', 'error');
+                showMessage('开始录音... 🎤', 'info');
+                startRecordingTimer();
+                
+            } else {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+                isRecording = false;
+                recordBtn.innerHTML = '<i class="fas fa-microphone"></i> 开始录音';
             }
-        } else {
-            // 停止录音
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            mediaRecorder = null;
+        } catch (error) {
+            console.error('录音失败:', error);
+            showMessage('无法访问麦克风，请检查权限设置 🎤', 'error');
             recordBtn.innerHTML = '<i class="fas fa-microphone"></i> 开始录音';
-            recordBtn.classList.remove('recording');
-            stopTimer();
+            isRecording = false;
         }
     });
 }
 
-// 计时器函数
-function startTimer() {
+// 添加录音计时器函数
+function startRecordingTimer() {
     recordingDuration = 0;
-    const timer = document.querySelector('.voice-timer');
+    const timerEl = document.querySelector('.voice-timer');
+    timerEl.style.display = 'block';
+    timerEl.textContent = '00:00';
+    
     recordingTimer = setInterval(() => {
         recordingDuration++;
         const minutes = Math.floor(recordingDuration / 60);
         const seconds = recordingDuration % 60;
-        timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         
         // 到达最大时长时自动停止
         if (recordingDuration >= MAX_RECORDING_TIME) {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                mediaRecorder = null;
-                document.getElementById('recordVoiceBtn').innerHTML = '<i class="fas fa-microphone"></i> 开始录音';
-                document.getElementById('recordVoiceBtn').classList.remove('recording');
-                stopTimer();
                 showMessage('已达到最大录音时长 ⏱️', 'warning');
             }
         }
     }, 1000);
 }
 
-function stopTimer() {
-    clearInterval(recordingTimer);
-    document.querySelector('.voice-timer').style.display = 'none';
-}
-
-// 上传语音文件
-async function uploadVoice(voiceBlob) {
-    try {
-        console.log('开始上传语音文件...');
-        const storageRef = firebase.storage().ref();
-        const voiceRef = storageRef.child(`voices/${Date.now()}.wav`);
-        
-        // 显示上传进度
-        const uploadTask = voiceRef.put(voiceBlob);
-        
-        // 监听上传进度
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log('上传进度: ' + progress + '%');
-            },
-            (error) => {
-                console.error('语音上传失败:', error);
-                throw error;
-            }
-        );
-
-        // 等待上传完成
-        await uploadTask;
-        console.log('语音文件上传成功');
-        
-        // 获取下载URL
-        const downloadURL = await voiceRef.getDownloadURL();
-        console.log('获取到语音文件URL');
-        return downloadURL;
-        
-    } catch (error) {
-        console.error('语音上传过程出错:', error);
-        throw error;
+// 添加停止计时器函数
+function stopRecordingTimer() {
+    if (recordingTimer) {
+        clearInterval(recordingTimer);
+        const timerEl = document.querySelector('.voice-timer');
+        timerEl.style.display = 'none';
     }
 }
 
-// 添加图片压缩函数
+// 修改上传语音函数
+async function uploadVoice(voiceBlob) {
+    try {
+        console.log('开始处理语音文件...');
+        
+        // 压缩音频质量
+        const compressedBlob = await compressAudio(voiceBlob);
+        
+        // 如果文件仍然太大，将其分片存储
+        if (compressedBlob.size > 900000) { // 900KB
+            console.log('文件较大，进行分片存储...');
+            const chunks = await splitAudioIntoChunks(compressedBlob);
+            return {
+                type: 'chunks',
+                chunks: chunks
+            };
+        } else {
+            // 转换为 base64
+            const base64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(compressedBlob);
+            });
+            return {
+                type: 'single',
+                data: base64
+            };
+        }
+    } catch (error) {
+        console.error('语音处理失败:', error);
+        throw new Error('语音处理失败');
+    }
+}
+
+// 修改音频压缩函数
+async function compressAudio(blob) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    // 创建离线上下文，使用更合理的采样率
+    const offlineContext = new OfflineAudioContext(
+        1, // 单声道
+        audioBuffer.length, 
+        32000 // 使用32kHz的采样率
+    );
+    
+    const source = offlineContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineContext.destination);
+    source.start();
+    
+    const renderedBuffer = await offlineContext.startRendering();
+    const compressedBlob = await new Promise(resolve => {
+        const mediaStreamDestination = audioContext.createMediaStreamDestination();
+        const mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, {
+            mimeType: 'audio/webm;codecs=opus',
+            bitsPerSecond: 96000 // 增加到96kbps，保证音质
+        });
+        
+        const chunks = [];
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' }));
+        
+        mediaRecorder.start();
+        const source = audioContext.createBufferSource();
+        source.buffer = renderedBuffer;
+        source.connect(mediaStreamDestination);
+        source.start();
+        setTimeout(() => mediaRecorder.stop(), renderedBuffer.duration * 1000);
+    });
+    
+    return compressedBlob;
+}
+
+// 修改分片大小
+async function splitAudioIntoChunks(blob) {
+    const chunkSize = 500000; // 减小到500KB
+    const chunks = [];
+    let offset = 0;
+    
+    while (offset < blob.size) {
+        const chunk = blob.slice(offset, offset + chunkSize);
+        const base64Chunk = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(chunk);
+        });
+        chunks.push(base64Chunk);
+        offset += chunkSize;
+    }
+    
+    return chunks;
+}
+
+// 修改图片压缩函数
 async function compressImage(file) {
     return new Promise((resolve, reject) => {
         const maxWidth = 1200;
         const maxHeight = 1200;
-        const maxSizeMB = 1;
+        const maxSizeMB = 0.5; // 压缩到500KB以下
         
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -1018,7 +1112,7 @@ async function compressImage(file) {
                 let width = img.width;
                 let height = img.height;
                 
-                // 计算缩放比例
+                // 如果图片尺寸过大，按比例缩小
                 if (width > maxWidth || height > maxHeight) {
                     const ratio = Math.min(maxWidth / width, maxHeight / height);
                     width *= ratio;
@@ -1032,10 +1126,10 @@ async function compressImage(file) {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                let quality = 0.8;
+                // 逐步降低质量直到文件大小符合要求
+                let quality = 0.7;
                 let base64 = canvas.toDataURL('image/jpeg', quality);
                 
-                // 如果大小仍然超过限制，继续压缩
                 while (base64.length > maxSizeMB * 1024 * 1024 && quality > 0.1) {
                     quality -= 0.1;
                     base64 = canvas.toDataURL('image/jpeg', quality);
@@ -1048,33 +1142,6 @@ async function compressImage(file) {
         };
         reader.onerror = reject;
     });
-}
-
-// 修改 uploadImage 函数
-async function uploadImage(file) {
-    try {
-        // 检查文件大小
-        if (file.size > 2 * 1024 * 1024) { // 2MB
-            showMessage('图片太大，正在压缩...', 'info');
-            const compressedImage = await compressImage(file);
-            return compressedImage;
-        }
-        
-        // 如果文件不需要压缩，直接转换为 base64
-        const reader = new FileReader();
-        return new Promise((resolve, reject) => {
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => {
-                console.error('图片读取失败:', reader.error);
-                reject(new Error('图片读取失败'));
-            };
-            reader.readAsDataURL(file);
-        });
-    } catch (error) {
-        console.error('图片处理失败:', error);
-        showMessage('图片处理失败，请重试 📸', 'error');
-        throw new Error('图片处理失败');
-    }
 }
 
 // 添加生成缩略图函数
@@ -1190,89 +1257,66 @@ function showLoadingIndicator(show = true) {
     loadingEl.style.display = show ? 'block' : 'none';
 }
 
-// 修改无限滚动的实现
+// 添加滚动加载功能
 function setupInfiniteScroll() {
-    const timelineWrapper = document.querySelector('.timeline-wrapper');
+    const timelineEl = document.querySelector('.timeline');
     let isLoading = false;
-    let scrollTimeout = null;
+    let hasMorePosts = true;
     
-    timelineWrapper.addEventListener('scroll', () => {
-        if (scrollTimeout) {
-            clearTimeout(scrollTimeout);
-        }
-        
-        scrollTimeout = setTimeout(() => {
-            const { scrollTop, scrollHeight, clientHeight } = timelineWrapper;
-            const threshold = 100; // 滚动阈值
-            
-            if (scrollHeight - scrollTop - clientHeight < threshold && !isLoading && lastVisiblePost) {
+    window.addEventListener('scroll', async () => {
+        // 检查是否到达底部
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+            if (!isLoading && hasMorePosts) {
                 isLoading = true;
-                currentPage++;
                 
                 // 显示加载提示
-                showLoadingIndicator(true);
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.className = 'loading-indicator';
+                loadingIndicator.textContent = '正在加载内容... 📃';
+                timelineEl.appendChild(loadingIndicator);
                 
-                loadPosts(lastVisiblePost)
-                    .then(() => {
-                        isLoading = false;
-                        // 隐藏加载提示
-                        showLoadingIndicator(false);
-                    })
-                    .catch(() => {
-                        isLoading = false;
-                        currentPage--;
-                        // 隐藏加载提示
-                        showLoadingIndicator(false);
-                    });
+                try {
+                    // 加载下一页数据
+                    const result = await loadPosts(lastVisiblePost);
+                    
+                    if (result.posts.length === 0) {
+                        hasMorePosts = false;
+                        loadingIndicator.textContent = '已经到底啦 🎈';
+                        setTimeout(() => {
+                            loadingIndicator.remove();
+                        }, 2000);
+                    } else {
+                        lastVisiblePost = result.posts[result.posts.length - 1].timestamp;
+                        loadingIndicator.remove();
+                    }
+                } catch (error) {
+                    console.error('加载更多内容失败:', error);
+                    loadingIndicator.textContent = '加载失败，请重试 😢';
+                    setTimeout(() => {
+                        loadingIndicator.remove();
+                    }, 2000);
+                }
+                
+                isLoading = false;
             }
-        }, 150);
-    });
-}
-
-// 在初始化时调用
-setupInfiniteScroll();
-
-// 添加实时更新处理
-function handleRealtimeUpdate(change) {
-    console.log('收到实时更新:', change);
-    
-    // 更新缓存
-    postCache.clear(); // 清除缓存，强制重新加载
-    
-    // 重新加载数据
-    currentPage = 1;
-    loadPosts();
-}
-
-// 添加网络状态监听
-function setupNetworkListener() {
-    let isReconnecting = false;
-
-    // 监听在线状态
-    window.addEventListener('online', () => {
-        console.log('网络已连接');
-        showMessage('网络已恢复 🌐', 'success');
-        if (!isReconnecting) {
-            isReconnecting = true;
-            // 重新加载数据
-            loadPosts()
-                .then(() => {
-                    isReconnecting = false;
-                })
-                .catch(() => {
-                    isReconnecting = false;
-                });
         }
     });
-
-    window.addEventListener('offline', () => {
-        console.log('网络已断开');
-        showMessage('网络已断开，将使用离线数据 📴', 'warning');
-    });
 }
 
-// 在初始化时调用
-setupNetworkListener();
+// 添加加载指示器函数
+function showLoadingIndicator(show) {
+    let loadingEl = document.querySelector('.loading-indicator');
+    if (!loadingEl) {
+        loadingEl = document.createElement('div');
+        loadingEl.className = 'loading-indicator';
+        loadingEl.innerHTML = '加载中... 🚀';
+        document.querySelector('.timeline-wrapper').appendChild(loadingEl);
+    }
+    
+    loadingEl.style.display = show ? 'block' : 'none';
+}
+
+// 添加相关CSS样式
 
 // 添加身份选择功能
 function selectUser(username) {
@@ -1331,6 +1375,7 @@ function initializeApp() {
     
     setupFilters();
     initVoiceRecording();
+    setupInfiniteScroll(); // 添加滚动加载功能
 }
 
 // 初始化时添加离线持久化
@@ -1342,3 +1387,40 @@ firebase.firestore().enablePersistence()
             console.log('当前浏览器不支持离线持久化');
         }
     });
+
+// 修改渲染帖子函数
+function renderPost(post) {
+    const postEl = document.createElement('div');
+    postEl.className = 'timeline-item';
+    postEl.setAttribute('data-user', post.user);
+    
+    // 创建帖子内容
+    const contentEl = document.createElement('div');
+    contentEl.className = 'timeline-content';
+    
+    // 添加文本内容
+    if (post.content) {
+        const textEl = document.createElement('div');
+        textEl.className = 'timeline-text';
+        textEl.textContent = post.content;
+        contentEl.appendChild(textEl);
+    }
+    
+    // 处理语音
+    if (post.voice) {
+        const voiceContainer = document.createElement('div');
+        voiceContainer.className = 'voice-preview-container';
+        
+        const audioEl = document.createElement('audio');
+        audioEl.className = 'voice-player';
+        audioEl.controls = true;
+        audioEl.preload = 'metadata';
+        audioEl.src = post.voice;
+        
+        voiceContainer.appendChild(audioEl);
+        contentEl.appendChild(voiceContainer);
+    }
+    
+    postEl.appendChild(contentEl);
+    return postEl;
+}
