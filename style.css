@@ -11,9 +11,9 @@
     --shadow: rgba(74, 59, 99, 0.1);
     --gradient-start: #F6F4FF;
     --gradient-end: #FFF4F9;
-    --base-font-size: 14px;
-    --small-font-size: 12px;
-    --smaller-font-size: 10px;
+    --base-font-size: 13px;
+    --small-font-size: 11px;
+    --smaller-font-size: 9px;
 }
 
 body {
@@ -137,8 +137,8 @@ body {
 
 /* 发布记录框样式统一 */
 .timeline-item {
-    width: 75% !important;
-    max-width: 450px !important;
+    width: calc(75% * 1.2) !important; /* 增加1.2倍宽度 */
+    max-width: calc(450px * 1.2) !important; /* 增加1.2倍最大宽度 */
     margin: 15px auto !important;
     padding: 20px !important;
     background: rgba(255, 255, 255, 0.9);
@@ -151,56 +151,47 @@ body {
 
 /* 移动端适配 */
 @media screen and (max-width: 768px) {
-    .title-wrapper,
-    .post-form-card,
-    .filter-section,
-    .module-wrapper {
-        width: 95% !important;
-        padding: 15px !important;
-        margin: 40px auto !important; /* 增加到 40px */
-    }
-
-    .title-wrapper::before,
-    .post-form-card::before,
-    .filter-section::before,
-    .module-wrapper::before {
-        top: -5px;
-        left: -5px;
-        right: -5px;
-        bottom: -5px;
-    }
-
+    /* 调整时间线项目的宽度和边距 */
     .timeline-item {
-        width: 90% !important;
+        width: 90% !important; /* 恢复原始宽度 */
+        margin: 0 auto 20px;
         padding: 15px !important;
+        transform: none; /* 移除缩放效果 */
     }
 
-    .module-wrapper::before {
-        top: -12px;  /* 移动端稍微小一点 */
-        left: -12px;
-        right: -12px;
-        bottom: -12px;
+    /* 确保悬停效果正常工作 */
+    .timeline-item:hover {
+        transform: translateY(-5px); /* 只保留上移效果 */
     }
 
-    .module-wrapper:hover::before {
-        top: -18px;
-        left: -18px;
-        right: -18px;
-        bottom: -18px;
+    /* 调整模块容器的间距 */
+    .module-container {
+        margin-bottom: 30px !important; /* 调整为更合适的间距 */
+    }
+
+    /* 调整容器宽度 */
+    .container {
+        width: 95% !important;
+        padding: 10px !important;
     }
 }
 
 /* 平板设备适配 */
 @media screen and (min-width: 769px) and (max-width: 1024px) {
-    .title-wrapper,
-    .post-form-card,
-    .filter-section,
-    .module-wrapper {
-        width: 90% !important;
+    .timeline-item {
+        width: calc(80% * 1.2) !important; /* 增加1.2倍宽度 */
+    }
+}
+
+/* 大屏幕适配 */
+@media screen and (min-width: 1025px) {
+    .container {
+        width: calc(600px * 1.2) !important; /* 增加容器宽度 */
     }
 
     .timeline-item {
-        width: 80% !important;
+        width: 100% !important;
+        max-width: calc(600px * 1.2) !important; /* 增加最大宽度 */
     }
 }
 
@@ -416,12 +407,13 @@ body {
 /* 滚动容器 */
 .timeline-wrapper {
     position: relative;
-    height: calc(85vh * 1.2) !important;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary-light) transparent;
-    padding: 20px !important; /* 确保内边距与其他模块一致 */
+    min-height: 200px; /* 给一个最小高度 */
+    transition: height 0.3s ease; /* 添加平滑过渡 */
+}
+
+.timeline {
+    position: relative;
+    width: 100%;
 }
 
 /* Webkit滚动条样式 */
@@ -559,7 +551,7 @@ body {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: calc(var(--base-font-size) * 0.84) !important; /* 缩小到0.7倍 */
+    font-size: calc(var(--base-font-size) * 0.95) !important;
 }
 
 /* 用户名特殊样式 */
@@ -571,7 +563,7 @@ body {
 /* 时间特殊样式 */
 .timeline-date {
     color: var(--text-light);
-    font-size: calc(var(--base-font-size) * 0.84) !important; /* 缩小到0.7倍 */
+    font-size: calc(var(--base-font-size) * 0.95) !important;
 }
 
 /* 心情样式 */
@@ -587,7 +579,7 @@ body {
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid var(--primary-light);
     border-radius: 10px;
-    font-size: calc(var(--small-font-size) * 0.75); /* 缩小到0.75倍 */
+    font-size: calc(var(--small-font-size) * 0.95) !important;
     color: var(--text);
     box-shadow: 0 2px 6px rgba(123, 107, 153, 0.1);
     transition: all 0.3s ease;
@@ -609,39 +601,61 @@ body {
     width: 100%;
     box-sizing: border-box;
     word-wrap: break-word;
-    font-size: calc(var(--base-font-size) * 0.91) !important; /* 缩小到0.7倍 */
-    font-weight: 500;
+    font-size: calc(var(--base-font-size) * 2.5) !important; /* 直接设置2.5倍大小 */
+    font-weight: bold !important;
 }
 
-/* 移动端适配 */
 @media screen and (max-width: 768px) {
     .timeline-text {
-        font-size: calc(var(--base-font-size) * 1.4) !important; /* 移动端稍微小一点 */
+        font-size: calc(var(--base-font-size) * 2.5) !important;
     }
 }
 
+/* 移动端适配下的字体也保持加粗和大小 */
+@media screen and (max-width: 768px) {
+    .timeline-text {
+        font-size: calc(var(--base-font-size) * 1.536) !important;
+        font-weight: bold !important;
+    }
+}
+
+/* 修改图片网格和缩略图样式 */
 .timeline-media {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;  /* 减小图片之间的间距 */
-    margin-top: 10px;  /* 减小图片区域的上边距 */
+    gap: 8px;
+    margin-top: 10px;
     width: 100%;
     box-sizing: border-box;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
 }
 
 .timeline-media img {
     width: 100%;
-    height: 80px !important;
+    aspect-ratio: 2/1; /* 设置2:1的宽高比 */
+    height: auto !important; /* 移除固定高度 */
     object-fit: cover;
+    object-position: center; /* 确保图片居中显示 */
     border-radius: 8px;
     cursor: pointer;
     transition: transform 0.3s ease;
 }
 
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .timeline-media {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+
+    .timeline-media img {
+        aspect-ratio: 2/1; /* 保持相同的宽高比 */
+    }
+}
+
+/* 悬停效果 */
 .timeline-media img:hover {
-    transform: scale(1.05);
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .timeline-footer {
@@ -1495,7 +1509,7 @@ audio {
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid var(--primary-light);
     border-radius: 10px;
-    font-size: calc(var(--small-font-size) * 0.75); /* 缩小到0.75倍 */
+    font-size: calc(var(--small-font-size) * 0.95) !important;
     color: var(--text);
     box-shadow: 0 2px 6px rgba(123, 107, 153, 0.1);
     transition: all 0.3s ease;
@@ -2477,14 +2491,14 @@ audio {
 .subtitle { font-size: var(--base-font-size) !important; }
 .timeline-text { font-size: var(--base-font-size) !important; }
 .timeline-user,
-.timeline-date { font-size: calc(var(--base-font-size) * 0.84) !important; /* 缩小到0.7倍 */ }
+.timeline-date { font-size: calc(var(--base-font-size) * 0.8) !important; /* 统一使用0.8倍 */ }
 
 @media screen and (max-width: 768px) {
     .main-title { font-size: calc(var(--base-font-size) * 1.3) !important; }
     .subtitle { font-size: var(--small-font-size) !important; }
     .timeline-text { font-size: var(--small-font-size) !important; }
     .timeline-user,
-    .timeline-date { font-size: calc(var(--base-font-size) * 1.4) !important; /* 移动端稍微小一点 */ }
+    .timeline-date { font-size: calc(var(--base-font-size) * 0.8) !important; /* 保持移动端也是0.8倍 */ }
 }
 
 /* 强制控制内边距和外边距 */
@@ -3301,4 +3315,310 @@ audio {
     box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
     width: 90%;
     max-width: 400px;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    /* 调整时间线项目的宽度和边距 */
+    .timeline-item {
+        width: 90% !important;
+        margin: 0 auto 20px;
+        padding: 15px !important;
+        transform: scale(1.5); /* 从0.8改为1.5倍 */
+        transform-origin: top center; /* 从顶部中心开始缩放 */
+    }
+
+    /* 调整字体大小 */
+    .timeline-text {
+        font-size: calc(var(--base-font-size) * 0.85) !important;
+    }
+
+    .timeline-user,
+    .timeline-date {
+        font-size: calc(var(--base-font-size) * 0.8) !important;
+    }
+
+    .timeline-mood[data-mood] {
+        font-size: calc(var(--small-font-size) * 0.7) !important;
+    }
+
+    /* 补偿缩放导致的间距 */
+    .module-container {
+        margin-bottom: calc(40px * 1.5) !important; /* 调整间距以适应新的缩放比例 */
+    }
+
+    /* 确保悬停效果正常工作 */
+    .timeline-item:hover {
+        transform: scale(1.5) translateY(-5px); /* 更新悬停效果的缩放比例 */
+    }
+
+    /* 调整容器宽度以适应更大的缩放 */
+    .container {
+        max-width: 100% !important;
+        padding: 10px !important;
+    }
+
+    /* 调整模块容器的间距 */
+    .module-container {
+        margin-bottom: 60px !important;
+    }
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    /* 调整容器宽度 */
+    .container {
+        width: 100% !important;
+        padding: 10px !important;
+    }
+
+    /* 调整发布记录框 */
+    .timeline-item {
+        width: 95% !important;
+        margin: 15px auto !important;
+        padding: 15px !important;
+        transform: none !important; /* 移除所有缩放效果 */
+    }
+
+    /* 调整模块间距 */
+    .module-container {
+        margin-bottom: 20px !important;
+    }
+
+    /* 调整字体大小 */
+    .timeline-text,
+    .timeline-user,
+    .timeline-date {
+        font-size: calc(var(--base-font-size) * 0.8) !important;
+    }
+}
+
+/* 筛选模块字体大小 */
+.filter-group select,
+.filter-group input[type="date"],
+.filter-label {
+    font-size: calc(var(--base-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+}
+
+/* 时间线模块字体大小 */
+.timeline-user,
+.timeline-date,
+.timeline-text {
+    font-size: calc(var(--base-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+}
+
+.timeline-mood[data-mood] {
+    font-size: calc(var(--small-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+}
+
+/* 移动端适配下的字体大小 */
+@media screen and (max-width: 768px) {
+    .timeline-text,
+    .timeline-user,
+    .timeline-date {
+        font-size: calc(var(--base-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+    }
+}
+
+/* 嵌套回复的字体大小调整 */
+.nested-reply .reply-user,
+.nested-reply .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.6) !important;
+}
+
+.nested-reply .reply-content {
+    font-size: calc(var(--small-font-size) * 0.6) !important;
+}
+
+.nested-reply-btn,
+.nested-reply-submit-btn,
+.nested-reply-input {
+    font-size: calc(var(--small-font-size) * 0.6) !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .nested-reply .reply-user,
+    .nested-reply .reply-time,
+    .nested-reply .reply-content,
+    .nested-reply-btn,
+    .nested-reply-submit-btn,
+    .nested-reply-input {
+        font-size: calc(var(--small-font-size) * 0.6) !important;
+    }
+}
+
+/* 回复框和按钮的基础样式 */
+.reply-toggle-btn,
+.reply-submit-btn {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.8改为0.6 */
+}
+
+.reply-input {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.8改为0.6 */
+}
+
+/* 一级回复样式 */
+.nested-reply.level-1 .reply-content {
+    font-size: calc(var(--small-font-size) * 0.55) !important; /* 从0.75改为0.55 */
+}
+
+.nested-reply.level-1 .reply-user,
+.nested-reply.level-1 .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.55) !important; /* 从0.75改为0.55 */
+}
+
+/* 二级回复样式 */
+.nested-reply.level-2 .reply-content {
+    font-size: calc(var(--small-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+}
+
+.nested-reply.level-2 .reply-user,
+.nested-reply.level-2 .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+}
+
+/* 三级及以上回复样式 */
+.nested-reply.level-3 .reply-content,
+.nested-reply.level-n .reply-content {
+    font-size: calc(var(--small-font-size) * 0.45) !important; /* 从0.65改为0.45 */
+}
+
+.nested-reply.level-3 .reply-user,
+.nested-reply.level-3 .reply-time,
+.nested-reply.level-n .reply-user,
+.nested-reply.level-n .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.45) !important; /* 从0.65改为0.45 */
+}
+
+/* 回复按钮样式统一调整 */
+.nested-reply-btn,
+.nested-reply-submit-btn,
+.nested-reply-cancel-btn {
+    font-size: calc(var(--small-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+    padding: 4px 8px !important;
+}
+
+/* 回复输入框样式 */
+.nested-reply-input {
+    font-size: calc(var(--small-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+    padding: 6px 10px !important;
+}
+
+/* 第一级回复的样式 */
+.reply-content {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.45改为0.6 */
+}
+
+.reply-user,
+.reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.6) !important; /* 从0.45改为0.6 */
+}
+
+/* 回复按钮和输入框 */
+.reply-toggle-btn,
+.reply-submit-btn,
+.reply-input {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.45改为0.6 */
+}
+
+/* 嵌套回复样式 */
+.nested-reply .reply-content {
+    font-size: calc(var(--small-font-size) * 0.55) !important; /* 稍微小一点 */
+}
+
+.nested-reply .reply-user,
+.nested-reply .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.55) !important;
+}
+
+/* 调整音频播放器样式 */
+.voice-preview-container audio {
+    width: 90% !important;
+    height: 32px !important;
+    margin: 5px 0 !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .voice-preview-container audio {
+        width: 100% !important;
+        height: 28px !important;
+    }
+}
+
+/* 发布记录中的正文文字样式 */
+.timeline-content {
+    font-size: calc(var(--base-font-size) * 1.28) !important; /* 放大两倍 */
+    font-weight: bold !important;
+    line-height: 1.5;
+    margin: 10px 0;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .timeline-content {
+        font-size: calc(var(--base-font-size) * 1.28) !important;
+    }
+}
+
+/* 加载指示器样式 */
+.loading-indicator {
+    text-align: center;
+    padding: 15px;
+    margin: 10px 0;
+    color: var(--text-light);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    font-size: calc(var(--base-font-size) * 0.9);
+    transition: opacity 0.3s ease;
+    opacity: 1;
+}
+
+.loading-indicator.more-posts {
+    cursor: pointer;
+    background: rgba(123, 107, 153, 0.1);
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.loading-indicator.more-posts:hover {
+    background: rgba(123, 107, 153, 0.2);
+    transform: translateY(-2px);
+}
+
+/* 底部加载提示固定样式 */
+.loading-indicator.bottom-loader {
+    position: sticky;
+    bottom: 0;
+    margin-top: 20px;
+    z-index: 1;
+}
+
+/* 修改音频播放器样式 */
+.voice-preview-container {
+    width: 100%;
+    margin: 10px 0;
+    padding: 5px;
+}
+
+.voice-preview-container audio {
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* 发布记录中的正文文字样式 - 直接改帖子内容的字体大小 */
+.timeline-item .timeline-content {
+    font-size: 32px !important; /* 直接用具体的大小 */
+    font-weight: bold;
+    line-height: 1.5;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .timeline-item .timeline-content {
+        font-size: 28px !important;
+    }
 }
