@@ -357,12 +357,12 @@ body {
 /* 滚动容器 */
 .timeline-wrapper {
     position: relative;
-    height: calc(70vh * 1.2) !important; /* 增加高度为原来的1.2倍 */
+    height: calc(85vh * 1.2) !important;
     overflow-y: auto;
-    overflow-x: hidden; /* 3. 禁止水平滚动 */
+    overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-light) transparent;
-    padding: 0 20px 0 0;
+    padding: 20px !important; /* 确保内边距与其他模块一致 */
 }
 
 /* Webkit滚动条样式 */
@@ -396,7 +396,7 @@ body {
 /* 移动端适配 */
 @media screen and (max-width: 768px) {
     .timeline-wrapper {
-        height: calc(80vh * 1.2 - 200px) !important; /* 移动端也保持1.2倍的比例 */
+        height: calc(90vh * 1.2 - 200px) !important; /* 从 80vh 增加到 90vh，并乘以 1.2 */
         padding-right: 10px;
         overflow-x: hidden;
     }
@@ -2656,22 +2656,35 @@ audio {
     }
 }
 
+/* 修复日期选择器的占位符显示 */
+.filter-section input[type="date"]::-webkit-datetime-edit-text,
+.filter-section input[type="date"]::-webkit-datetime-edit-month-field,
+.filter-section input[type="date"]::-webkit-datetime-edit-day-field,
+.filter-section input[type="date"]::-webkit-datetime-edit-year-field {
+    color: var(--text);
+}
+
+/* 未选择时显示占位符 */
+.filter-section input[type="date"]:not(:valid):before {
+    content: attr(placeholder);
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+}
+
+/* 选择后隐藏占位符 */
+.filter-section input[type="date"]:valid:before {
+    display: none;
+}
+
 /* 移动端特别适配 */
 @media screen and (max-width: 768px) {
     .filter-section input[type="date"] {
         font-size: var(--smaller-font-size) !important;
         padding: 4px 8px !important;
         height: 28px !important;
-        
-        &::before {
-            content: attr(placeholder);
-            position: absolute;
-            color: var(--text-light);
-        }
-        
-        &:focus::before {
-            display: none;
-        }
     }
 }
 
