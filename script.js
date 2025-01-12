@@ -894,7 +894,9 @@ function initVoiceRecording() {
             // 开始录音
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm' // 使用更通用的格式
+                });
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = (event) => {
@@ -902,13 +904,18 @@ function initVoiceRecording() {
                 };
 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioBlob = new Blob(audioChunks, { 
+                        type: 'audio/webm; codecs=opus' // 指定编解码器
+                    });
                     const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob); // 将音频转换为Base64
+                    reader.readAsDataURL(audioBlob);
                     reader.onloadend = () => {
                         const base64Audio = reader.result;
+                        const voicePreview = document.getElementById('voicePreview');
                         voicePreview.src = base64Audio;
                         voicePreview.style.display = 'block';
+                        // 添加这行以确保音频加载完成
+                        voicePreview.load();
                     };
                 };
 
