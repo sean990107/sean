@@ -8,7 +8,26 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div class="container">
+    <!-- 添加身份选择弹窗（放在最外层） -->
+    <div id="userSelectModal" class="modal">
+        <div class="modal-content welcome-modal">
+            <h2>欢迎来到我们的小世界 ✨</h2>
+            <p>请选择你的身份：</p>
+            <div class="user-select-container">
+                <button class="user-select-btn" onclick="selectUser('晁森豪')">
+                    <span class="emoji">🤴</span>
+                    <span>晁森豪</span>
+                </button>
+                <button class="user-select-btn" onclick="selectUser('孙佳乐')">
+                    <span class="emoji">👸</span>
+                    <span>孙佳乐</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="container" style="display: none;">
         <!-- 标题模块 -->
         <div class="module-container">
             <div class="module-wrapper">
@@ -54,17 +73,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="user">
-                            <i class="fas fa-user"></i>
-                            选择用户 👤
-                        </label>
-                        <select id="user" required>
-                            <option value="晁森豪">晁森豪 🤴</option>
-                            <option value="孙佳乐">孙佳乐 👸</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
                         <label for="image">
                             <i class="fas fa-image"></i>
                             添加图片 📸
@@ -87,20 +95,40 @@
         <div class="module-container">
             <div class="module-wrapper">
                 <div class="filter-group">
-                    <input type="date" id="dateFilter" placeholder="选择日期" pattern="\d{4}-\d{2}-\d{2}">
-                    <select id="moodFilter">
-                        <option value="">所有心情</option>
-                        <option value="happy">😊 开心</option>
-                        <option value="sad">😢 难过</option>
-                        <option value="excited">🥳 激动</option>
-                        <option value="angry">😠 生气</option>
-                        <option value="love">❤️ 爱你</option>
-                    </select>
-                    <select id="userFilter">
-                        <option value="">所有人</option>
-                        <option value="晁森豪">晁森豪 🤴</option>
-                        <option value="孙佳乐">孙佳乐 👸</option>
-                    </select>
+                    <div class="filter-item">
+                        <div class="filter-label">
+                            <i class="fas fa-calendar"></i>
+                            <span>日期</span>
+                        </div>
+                        <input type="date" id="dateFilter" placeholder="选择日期">
+                    </div>
+                    
+                    <div class="filter-item">
+                        <div class="filter-label">
+                            <i class="fas fa-smile"></i>
+                            <span>心情</span>
+                        </div>
+                        <select id="moodFilter">
+                            <option value="">所有心情</option>
+                            <option value="happy">😊 开心</option>
+                            <option value="sad">😢 难过</option>
+                            <option value="excited">🥳 激动</option>
+                            <option value="angry">😠 生气</option>
+                            <option value="love">❤️ 爱你</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <div class="filter-label">
+                            <i class="fas fa-user"></i>
+                            <span>用户</span>
+                        </div>
+                        <select id="userFilter">
+                            <option value="">所有人</option>
+                            <option value="晁森豪">晁森豪 🤴</option>
+                            <option value="孙佳乐">孙佳乐 👸</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
