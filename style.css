@@ -42,7 +42,7 @@ body {
     position: relative;
     width: 85% !important;
     max-width: 510px !important;
-    margin: 30px auto !important; /* 从 15px 增加到 30px */
+    margin: 30px auto !important;
     padding: 20px !important;
     background: rgba(255, 255, 255, 0.9);
     border-radius: 20px;
@@ -345,44 +345,21 @@ body {
     box-shadow: 0 5px 15px rgba(123, 107, 153, 0.3);
 }
 
-/* 时间线外层固定容器 */
-.timeline-outer-wrapper {
+/* 内容容器 */
+.timeline-container {
+    width: 100%;
+    height: 100%;
     position: relative;
-    width: 85% !important;
-    max-width: 510px !important;
-    margin: 30px auto !important;
-    padding: 20px !important;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
-    transition: all 0.3s ease;
-    box-sizing: border-box !important;
-    z-index: 0;
 }
 
-.timeline-outer-wrapper::before {
-    content: '';
-    position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 25px;
-    z-index: -1;
-    transition: all 0.3s ease;
-    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.1);
-}
-
-/* 内部滚动容器 */
+/* 滚动容器 */
 .timeline-wrapper {
     position: relative;
-    z-index: 1;
-    padding: 0 20px 0 0;
-    height: calc(70vh * 1.3) !important; /* 设置为原来高度的1.3倍 */
+    height: calc(70vh * 1.3) !important;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-light) transparent;
+    padding: 0 20px 0 0;
 }
 
 /* Webkit滚动条样式 */
@@ -2614,4 +2591,38 @@ audio {
 .voice-timer {
     font-size: var(--small-font-size);
     color: var(--text-light);
+}
+
+/* 内容容器 */
+.timeline-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* 筛选栏样式调整 */
+.filter-section select,
+.filter-section input[type="date"] {
+    font-size: var(--small-font-size) !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    height: 32px !important;
+    min-width: 100px !important;
+    max-width: 130px !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .filter-section select,
+    .filter-section input[type="date"] {
+        font-size: var(--smaller-font-size) !important;
+        padding: 4px 8px !important;
+        height: 28px !important;
+        min-width: 80px !important;
+        max-width: 110px !important;
+    }
+
+    .filter-group {
+        gap: 8px;
+    }
 }
