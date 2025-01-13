@@ -1,0 +1,3624 @@
+:root {
+    --primary: #7B6B99;
+    --primary-light: #9B8BB9;
+    --primary-dark: #5A4C78;
+    --secondary: #E0A5BC;
+    --secondary-light: #F4D3DD;
+    --text: #4A3B63;
+    --text-light: #7A6B93;
+    --background: #F6F4FF;
+    --white: #FFFFFF;
+    --shadow: rgba(74, 59, 99, 0.1);
+    --gradient-start: #F6F4FF;
+    --gradient-end: #FFF4F9;
+    --base-font-size: 13px;
+    --small-font-size: 11px;
+    --smaller-font-size: 9px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    min-height: 100vh;
+    color: var(--text);
+}
+
+/* 统一容器宽度和基础样式 */
+.container {
+    max-width: 600px !important;
+    width: min(95%, 600px) !important;
+    margin: 0 auto;
+    padding: 15px;
+    box-sizing: border-box;
+    padding-top: 30px; /* 增加顶部间距 */
+}
+
+/* 模块容器样式 */
+.module-container {
+    margin-bottom: 60px; /* 模块之间的间距 */
+}
+
+/* 统一所有主要模块的基础样式 */
+.module-wrapper {
+    position: relative;
+    width: 85% !important;
+    max-width: 510px !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
+    transition: all 0.3s ease;
+    box-sizing: border-box !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .module-container {
+        margin-bottom: 40px; /* 移动端模块间距稍小 */
+    }
+}
+
+/* 第一个模块需要顶部间距 */
+.container > *:first-child .module-wrapper {
+    margin-top: 30px !important;
+}
+
+/* 最后一个模块不需要底部间距 */
+.container > *:last-child .module-wrapper {
+    margin-bottom: 30px !important;
+}
+
+/* 统一所有模块的装饰外框 */
+.module-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 30px;
+    z-index: -1;
+    transition: all 0.3s ease;
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.1);
+}
+
+/* 统一所有模块的悬停效果 - 整个模块一起动效 */
+.module-wrapper:hover {
+    transform: translateY(-5px); /* 添加整体模块的动效 */
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
+}
+
+.module-wrapper:hover::before {
+    top: -30px;
+    left: -30px;
+    right: -30px;
+    bottom: -30px;
+    box-shadow: 0 20px 50px rgba(74, 59, 99, 0.15);
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .module-wrapper {
+        width: 95% !important;
+        padding: 15px !important;
+        margin-bottom: 40px !important; /* 移动端稍微减小间距 */
+    }
+
+    .container > *:first-child .module-wrapper {
+        margin-top: 20px !important;
+    }
+
+    .container > *:last-child .module-wrapper {
+        margin-bottom: 20px !important;
+    }
+
+    .module-wrapper::before {
+        top: -12px;
+        left: -12px;
+        right: -12px;
+        bottom: -12px;
+    }
+
+    .module-wrapper:hover {
+        transform: translateY(-3px); /* 移动端稍微减小动效幅度 */
+    }
+
+    .module-wrapper:hover::before {
+        top: -18px;
+        left: -18px;
+        right: -18px;
+        bottom: -18px;
+    }
+}
+
+/* 发布记录框样式统一 */
+.timeline-item {
+    width: calc(75% * 1.2) !important; /* 增加1.2倍宽度 */
+    max-width: calc(450px * 1.2) !important; /* 增加1.2倍最大宽度 */
+    margin: 15px auto !important;
+    padding: 20px !important;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    box-sizing: border-box !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    /* 调整时间线项目的宽度和边距 */
+    .timeline-item {
+        width: 90% !important; /* 恢复原始宽度 */
+        margin: 0 auto 20px;
+        padding: 15px !important;
+        transform: none; /* 移除缩放效果 */
+    }
+
+    /* 确保悬停效果正常工作 */
+    .timeline-item:hover {
+        transform: translateY(-5px); /* 只保留上移效果 */
+    }
+
+    /* 调整模块容器的间距 */
+    .module-container {
+        margin-bottom: 30px !important; /* 调整为更合适的间距 */
+    }
+
+    /* 调整容器宽度 */
+    .container {
+        width: 95% !important;
+        padding: 10px !important;
+    }
+}
+
+/* 平板设备适配 */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .timeline-item {
+        width: calc(80% * 1.2) !important; /* 增加1.2倍宽度 */
+    }
+}
+
+/* 大屏幕适配 */
+@media screen and (min-width: 1025px) {
+    .container {
+        width: calc(600px * 1.2) !important; /* 增加容器宽度 */
+    }
+
+    .timeline-item {
+        width: 100% !important;
+        max-width: calc(600px * 1.2) !important; /* 增加最大宽度 */
+    }
+}
+
+/* 标题模块样式调整 */
+.title-wrapper {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.25);
+}
+
+.title-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 30px;
+    z-index: -1;
+    transition: all 0.3s ease;
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
+}
+
+.title-wrapper:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.3);
+}
+
+.title-wrapper:hover::before {
+    top: -15px;
+    left: -15px;
+    right: -15px;
+    bottom: -15px;
+    box-shadow: 0 20px 50px rgba(74, 59, 99, 0.25);
+}
+
+/* 修改标题大小 */
+.main-title {
+    color: var(--primary);
+    margin: 0;
+    font-size: calc(var(--base-font-size) * 1.8) !important; /* 从 1.5 增加到 1.8 */
+    font-weight: 700;
+}
+
+.subtitle {
+    color: var(--text-light);
+    margin: 8px 0 0;
+    font-size: var(--base-font-size) !important;
+}
+
+/* 发布模块样式调整 */
+.post-form-card {
+    position: relative;
+    width: 85% !important;
+    max-width: 510px !important;
+    margin: 15px auto !important;
+    padding: 20px !important;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
+    transition: all 0.3s ease;
+    box-sizing: border-box !important;
+}
+
+/* 移除内框的多余样式 */
+.post-form {
+    position: relative;
+    width: 100%;
+    z-index: 1;
+}
+
+/* 表单内容样式 */
+.form-group {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+/* 移除多余的外框样式 */
+.post-form-card::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 25px;
+    z-index: -1;
+    transition: all 0.3s ease;
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.1);
+}
+
+/* 统一悬停效果 */
+.post-form-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
+}
+
+.post-form-card:hover::before {
+    top: -12px;
+    left: -12px;
+    right: -12px;
+    bottom: -12px;
+    box-shadow: 0 20px 50px rgba(74, 59, 99, 0.15);
+}
+
+.post-form-card:hover .post-form {
+    transform: none;
+    box-shadow: none;
+}
+
+.post-form-card:hover::before {
+    top: -15px;
+    left: -15px;
+    right: -15px;
+    bottom: -15px;
+    box-shadow: 0 20px 50px rgba(74, 59, 99, 0.25);
+}
+
+/* 表单内容样式 */
+.post-form {
+    position: relative;
+    z-index: 1;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    color: var(--text);
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: var(--base-font-size);
+}
+
+.form-group label i {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid rgba(123, 107, 153, 0.1);
+    border-radius: 10px;
+    font-size: 1em;
+    font-family: inherit;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    height: 80px; /* 从原来的 100px 改为 80px */
+    resize: vertical;
+    min-height: 60px; /* 添加最小高度限制 */
+    max-height: 200px; /* 添加最大高度限制 */
+}
+
+.form-group textarea:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 15px rgba(155, 139, 185, 0.2);
+}
+
+.submit-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: var(--base-font-size);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-weight: 600;
+    height: 40px !important;
+    line-height: 40px !important;
+    padding: 0 20px !important;
+}
+
+.submit-btn i {
+    margin-right: 8px;
+}
+
+.submit-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.3);
+}
+
+/* 内容容器 */
+.timeline-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* 滚动容器 */
+.timeline-wrapper {
+    position: relative;
+    min-height: 200px; /* 给一个最小高度 */
+    transition: height 0.3s ease; /* 添加平滑过渡 */
+}
+
+.timeline {
+    position: relative;
+    width: 100%;
+}
+
+/* Webkit滚动条样式 */
+.timeline-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.timeline-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.timeline-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--primary-light);
+    border-radius: 4px;
+}
+
+/* 悬停效果 */
+.timeline-outer-wrapper:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
+}
+
+.timeline-outer-wrapper:hover::before {
+    top: -12px;
+    left: -12px;
+    right: -12px;
+    bottom: -12px;
+    box-shadow: 0 20px 50px rgba(74, 59, 99, 0.15);
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .timeline-wrapper {
+        height: calc(90vh * 1.2 - 200px) !important; /* 从 80vh 增加到 90vh，并乘以 1.2 */
+        padding-right: 10px;
+        overflow-x: hidden;
+    }
+}
+
+/* 发布记录框样式调整 */
+.timeline-item {
+    width: 75% !important; /* 从 60% 调整到 75% */
+    max-width: 450px !important; /* 从 360px 调整到 450px */
+    margin-bottom: 15px !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+    position: relative;
+    z-index: 2; /* 确保发布记录框在内框之上 */
+}
+
+/* 晁森豪的消息样式 */
+.timeline-item[data-user="晁森豪"] {
+    margin-right: auto !important;
+    margin-left: 20px !important; /* 增加左边距，避免小球遮挡 */
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    border-right: 4px solid var(--primary-light);
+    background: rgba(123, 107, 153, 0.05);
+}
+
+/* 孙佳乐的消息样式 */
+.timeline-item[data-user="孙佳乐"] {
+    margin-left: auto !important;
+    margin-right: 0 !important; /* 移除右侧间距 */
+    padding-right: 15px !important;
+    padding-left: 15px !important;
+    border-left: 4px solid var(--secondary);
+    background: rgba(224, 165, 188, 0.05);
+}
+
+/* 装饰小球样式调整 */
+.timeline-item[data-user="晁森豪"]::after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 5px rgba(123, 107, 153, 0.2);
+    z-index: 3; /* 确保小球显示在最上层 */
+}
+
+.timeline-item[data-user="孙佳乐"]::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    background: var(--secondary);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 5px rgba(224, 165, 188, 0.2);
+    z-index: 3; /* 确保小球显示在最上层 */
+}
+
+/* 悬停效果 */
+.timeline-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
+}
+
+.timeline-item[data-user="晁森豪"]:hover {
+    background: rgba(123, 107, 153, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(123, 107, 153, 0.2);
+}
+
+.timeline-item[data-user="孙佳乐"]:hover {
+    background: rgba(224, 165, 188, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(224, 165, 188, 0.2);
+}
+
+/* 修改时间线头部样式 */
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+/* 用户名和时间的通用样式 */
+.timeline-user,
+.timeline-date {
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--primary-light);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: calc(var(--base-font-size) * 0.95) !important;
+}
+
+/* 用户名特殊样式 */
+.timeline-user {
+    font-weight: bold;
+    color: var(--primary);
+}
+
+/* 时间特殊样式 */
+.timeline-date {
+    color: var(--text-light);
+    font-size: calc(var(--base-font-size) * 0.95) !important;
+}
+
+/* 心情样式 */
+.timeline-mood {
+    display: none;
+}
+
+.timeline-mood[data-mood] {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    margin-bottom: 8px; /* 调整为下边距 */
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--primary-light);
+    border-radius: 10px;
+    font-size: calc(var(--small-font-size) * 0.95) !important;
+    color: var(--text);
+    box-shadow: 0 2px 6px rgba(123, 107, 153, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* 悬停效果 */
+.timeline-user:hover,
+.timeline-date:hover,
+.timeline-mood:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(123, 107, 153, 0.15);
+}
+
+/* 发布记录框中的文本样式调整 */
+.timeline-text {
+    margin: 6px 0;
+    line-height: 1.5;
+    color: var(--text);
+    width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    font-size: calc(var(--base-font-size) * 2.5) !important; /* 直接设置2.5倍大小 */
+    font-weight: bold !important;
+}
+
+@media screen and (max-width: 768px) {
+    .timeline-text {
+        font-size: calc(var(--base-font-size) * 2.5) !important;
+    }
+}
+
+/* 移动端适配下的字体也保持加粗和大小 */
+@media screen and (max-width: 768px) {
+    .timeline-text {
+        font-size: calc(var(--base-font-size) * 1.536) !important;
+        font-weight: bold !important;
+    }
+}
+
+/* 修改图片网格和缩略图样式 */
+.timeline-media {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.timeline-media img {
+    width: 100%;
+    aspect-ratio: 2/1; /* 设置2:1的宽高比 */
+    height: auto !important; /* 移除固定高度 */
+    object-fit: cover;
+    object-position: center; /* 确保图片居中显示 */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .timeline-media {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+
+    .timeline-media img {
+        aspect-ratio: 2/1; /* 保持相同的宽高比 */
+    }
+}
+
+/* 悬停效果 */
+.timeline-media img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 15px;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 5px;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+
+.delete-btn:hover {
+    color: #ff4444;
+    transform: scale(1.1);
+}
+
+/* 消息提示样式 */
+.message {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: white;
+    animation: slideIn 0.3s ease;
+    z-index: 1000;
+}
+
+.message.success {
+    background: #4CAF50;
+}
+
+.message.error {
+    background: #f44336;
+}
+
+.message.warning {
+    background: #ff9800;
+}
+
+/* 加载状态样式 */
+.loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    color: var(--text-light);
+}
+
+/* 图片预览容器 */
+.preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.preview-container img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* 筛选栏样式 */
+.filter-section {
+    display: flex;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    position: relative;
+    padding: 12px;
+    margin-bottom: 15px;
+    justify-content: center; /* 改为居中对齐 */
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.25);
+    transition: all 0.3s ease;
+    flex-wrap: wrap; /* 允许在小屏幕上换行 */
+}
+
+.filter-section::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 30px;
+    z-index: -1;
+    transition: all 0.3s ease;
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
+}
+
+/* 所有输入框的通用样式 */
+.filter-section input,
+.filter-section select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid rgba(123, 107, 153, 0.1);
+    border-radius: 10px;
+    font-size: 0.9em;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+    min-width: 120px;
+    max-width: 150px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+.filter-section input[type="date"]:hover,
+.filter-section select:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.2);
+}
+
+/* 重置日期选择器的样式 */
+.filter-section input[type="date"] {
+    position: relative;
+    padding-right: 30px;
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    letter-spacing: 1px;
+}
+
+/* 隐藏默认的日历图标 */
+.filter-section input[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100%;
+}
+
+/* 完全重置日期格式 */
+.filter-section input[type="date"]::-webkit-datetime-edit {
+    padding: 0;
+    text-align: center;
+    color: var(--text);
+}
+
+.filter-section input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+
+.filter-section input[type="date"]::-webkit-datetime-edit-text {
+    font-size: 0;
+    padding: 0;
+}
+
+.filter-section input[type="date"]::-webkit-datetime-edit-text::after {
+    content: " ";
+    font-size: 1em;
+    padding: 0 2px;
+}
+
+.filter-section input[type="date"]::-webkit-datetime-edit-year-field,
+.filter-section input[type="date"]::-webkit-datetime-edit-month-field,
+.filter-section input[type="date"]::-webkit-datetime-edit-day-field {
+    padding: 0;
+}
+
+/* 动画效果 */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 95% !important;
+        padding: 10px !important;
+    }
+
+    .title-wrapper,
+    .post-form-card,
+    .filter-section,
+    .module-wrapper {
+        width: 95% !important;
+        margin: 0 auto 15px auto !important;
+    }
+
+    .timeline-item[data-user="晁森豪"],
+    .timeline-item[data-user="孙佳乐"] {
+        width: 90% !important; /* 移动端略宽一些 */
+    }
+
+    .reply-item,
+    .nested-reply {
+        width: 95% !important;
+    }
+}
+
+/* 平板设备适配 */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        width: min(90%, 600px) !important;
+    }
+
+    .title-wrapper,
+    .post-form-card,
+    .filter-section,
+    .module-wrapper {
+        width: 85% !important;
+    }
+
+    .timeline-item[data-user="晁森豪"],
+    .timeline-item[data-user="孙佳乐"] {
+        width: 80% !important;
+    }
+}
+
+/* 大屏幕适配 */
+@media screen and (min-width: 1025px) {
+    .container {
+        width: 600px !important;
+    }
+
+    .title-wrapper,
+    .post-form-card,
+    .filter-section,
+    .module-wrapper {
+        width: 100% !important; /* 从 85% 改为 100% */
+    }
+
+    .timeline-item[data-user="晁森豪"],
+    .timeline-item[data-user="孙佳乐"] {
+        width: 100% !important; /* 从 80% 改为 100% */
+    }
+}
+
+/* 优化筛选框样式 */
+.filter-section select {
+    text-align: center;
+    text-align-last: center;
+    -webkit-text-align-last: center;
+    padding: 8px 25px; /* 左右padding保持一致 */
+    cursor: pointer;
+    position: relative;
+    width: 120px; /* 固定宽度确保内容居中 */
+}
+
+/* 重写下拉选项样式 */
+.filter-section select option {
+    text-align: center !important;
+    -moz-text-align-last: center !important;
+    text-align-last: center !important;
+    -webkit-text-align-last: center !important;
+    padding: 8px 0; /* 移除左右padding */
+    margin: 5px 0;
+    cursor: pointer;
+    background-color: white;
+}
+
+/* 自定义下拉框样式 */
+.filter-section select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: white url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237B6B99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+}
+
+/* 修改嵌套回复的样式 */
+.nested-replies {
+    margin-top: 10px;
+    margin-left: 15px; /* 减小左边距 */
+    padding-left: 15px;
+    border-left: 2px solid rgba(123, 107, 153, 0.1); /* 降低边框透明度 */
+}
+
+.nested-reply {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+    /* 移除左侧边框 */
+    border-left: none;
+}
+
+/* 修改第一层嵌套回复的样式 */
+.replies .nested-replies {
+    border-left: 2px solid var(--primary-light); /* 只保留第一层的边框 */
+}
+
+/* 移除更深层级的边框 */
+.nested-replies .nested-replies {
+    border-left: none;
+    margin-left: 10px; /* 减小深层嵌套的缩进 */
+}
+
+/* 优化移动端显示 */
+@media screen and (max-width: 768px) {
+    .nested-replies {
+        margin-left: 10px;
+        padding-left: 10px;
+    }
+    
+    .nested-replies .nested-replies {
+        margin-left: 5px;
+    }
+}
+
+/* 移除所有特定浏览器的text-indent */
+@-moz-document url-prefix() {
+    .filter-section select,
+    .filter-section select option {
+        text-align: center !important;
+        text-indent: 0 !important;
+    }
+}
+
+/* 内容控制区域样式 */
+.content-controls {
+    position: relative;
+    width: 100%;
+}
+
+/* 语音控件样式优化 */
+.voice-controls {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+.voice-btn {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.voice-btn::after {
+    content: '最长30秒';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8em;
+    color: var(--text-light);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.voice-btn:hover::after {
+    opacity: 1;
+}
+
+.voice-timer {
+    font-size: 0.9em;
+    padding: 4px 8px;
+    background: rgba(123, 107, 153, 0.1);
+    border-radius: 4px;
+}
+
+/* 预览音频样式 */
+#voicePreview {
+    position: absolute;
+    bottom: -50px;
+    right: 0;
+    width: 200px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+/* 确保文本框有足够的右侧边距 */
+#content {
+    padding-right: 120px; /* 为语音按钮留出空间 */
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .voice-controls {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        margin-top: 10px;
+        justify-content: flex-end;
+    }
+    
+    #content {
+        padding-right: 12px;
+    }
+    
+    #voicePreview {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+/* 语音消息样式 */
+.voice-message {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.voice-message:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.2);
+}
+
+.voice-message audio {
+    width: 100%;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+.voice-message .voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.voice-message .voice-btn {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    white-space: nowrap;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.voice-message .voice-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.2);
+}
+
+.voice-message .voice-timer {
+    font-size: 0.9em;
+    padding: 4px 8px;
+    background: rgba(123, 107, 153, 0.1);
+    border-radius: 4px;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .voice-message {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .voice-message audio {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .voice-message .voice-controls {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* 语音消息样式 */
+.voice-message {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+    transition: all 0.3s ease;
+}
+
+.voice-message:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(123, 107, 153, 0.15);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* 自定义音频播放器样式 */
+.voice-message audio {
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    background: transparent;
+}
+
+/* Webkit (Chrome, Safari) 特定样式 */
+.voice-message audio::-webkit-media-controls-panel {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+    border-radius: 20px;
+}
+
+.voice-message audio::-webkit-media-controls-current-time-display,
+.voice-message audio::-webkit-media-controls-time-remaining-display {
+    color: white;
+    font-weight: 500;
+}
+
+.voice-message audio::-webkit-media-controls-play-button {
+    background-color: white;
+    border-radius: 50%;
+    transform: scale(1.2);
+}
+
+.voice-message audio::-webkit-media-controls-timeline {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    margin: 0 10px;
+}
+
+/* Firefox 特定样式 */
+@-moz-document url-prefix() {
+    .voice-message audio {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+        border-radius: 20px;
+    }
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .voice-message {
+        margin: 8px 0;
+        padding: 8px;
+    }
+    
+    .voice-message audio {
+        height: 36px;
+    }
+}
+
+/* 语音录制相关样式 */
+.voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.voice-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.voice-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.2);
+}
+
+.voice-btn.recording {
+    background: #ff4444;
+    animation: pulse 1.5s infinite;
+}
+
+.voice-timer {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* 录音时的动画效果 */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 语音播放器样式 */
+audio {
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* 隐藏空的回复容器 */
+.replies:empty {
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* 只在有回复时显示回复区域的边框和间距 */
+.reply-section:not(:has(.replies:not(:empty))) {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* 优化回复区域的显示 */
+.reply-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 调整回复按钮的位置 */
+.reply-toggle-btn {
+    align-self: flex-start;
+    margin-top: 5px;
+}
+
+/* 统一所有回复相关按钮的样式 */
+.reply-toggle-btn,
+.nested-reply-btn,
+.reply-submit-btn,
+.nested-reply-submit-btn,
+.nested-reply-submit,
+.nested-reply-cancel,
+.nested-reply-actions button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 4px 8px !important; /* 从 8px 15px 减小到 4px 8px */
+    border-radius: 4px !important; /* 从 8px 减小到 4px */
+    cursor: pointer;
+    font-size: 0.8em !important; /* 减小字体大小 */
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px; /* 从 5px 减小到 3px */
+    height: 24px !important; /* 添加固定高度 */
+    line-height: 24px !important;
+}
+
+/* 统一所有回复按钮的悬停效果 */
+.reply-toggle-btn:hover,
+.nested-reply-btn:hover,
+.reply-submit-btn:hover,
+.nested-reply-submit-btn:hover,
+.nested-reply-submit:hover,
+.nested-reply-cancel:hover,
+.nested-reply-actions button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.2);
+}
+
+/* 优化嵌套回复表单中的按钮布局 */
+.nested-reply-actions {
+    display: flex;
+    gap: 5px; /* 从 10px 减小到 5px */
+    margin-top: 5px;
+}
+
+/* 移除之前的单独样式 */
+.nested-reply-submit-btn,
+.nested-reply-cancel-btn {
+    font-size: 0.9em;
+    padding: 8px 15px;
+    margin: 0;
+}
+
+/* 统一所有回复相关按钮的样式 */
+.reply-toggle-btn,
+.nested-reply-btn,
+.reply-submit-btn,
+.nested-reply-submit-btn,
+.nested-reply-submit,
+.nested-reply-cancel,
+.nested-reply-actions button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 4px 8px !important; /* 从 8px 15px 减小到 4px 8px */
+    border-radius: 4px !important; /* 从 8px 减小到 4px */
+    cursor: pointer;
+    font-size: 0.8em !important; /* 减小字体大小 */
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px; /* 从 5px 减小到 3px */
+    height: 24px !important; /* 添加固定高度 */
+    line-height: 24px !important;
+}
+
+/* 统一所有回复按钮的悬停效果 */
+.reply-toggle-btn:hover,
+.nested-reply-btn:hover,
+.reply-submit-btn:hover,
+.nested-reply-submit-btn:hover,
+.nested-reply-submit:hover,
+.nested-reply-cancel:hover,
+.nested-reply-actions button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.2);
+}
+
+/* 优化嵌套回复表单中的按钮布局 */
+.nested-reply-actions {
+    display: flex;
+    gap: 5px; /* 从 10px 减小到 5px */
+    margin-top: 5px;
+}
+
+/* 移除Safari特定的padding调整 */
+@media not all and (min-resolution:.001dpcm) { 
+    @supports (-webkit-appearance:none) {
+        .filter-section select {
+            padding: 8px 25px;
+        }
+    }
+}
+
+/* 修复 Firefox 特定的样式问题 */
+@-moz-document url-prefix() {
+    .filter-section select {
+        text-align: -moz-center !important;
+        text-indent: 0 !important;
+    }
+    
+    .filter-section select option {
+        text-align: -moz-center !important;
+        text-indent: 0 !important;
+    }
+}
+
+/* 修复 Safari 特定的样式问题 */
+@media not all and (min-resolution:.001dpcm) { 
+    @supports (-webkit-appearance:none) {
+        .filter-section select {
+            text-indent: 0;
+            padding-left: 25px;  /* Safari下的特殊调整 */
+        }
+        
+        .filter-section select option {
+            padding: 10px 20px;
+        }
+    }
+}
+
+/* 确保选项在所有浏览器中都居中 */
+.filter-section select::-ms-expand {
+    display: none;
+}
+
+.filter-section select option:checked {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+/* 装饰小球样式 */
+.timeline-item[data-user="晁森豪"]::after {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 5px rgba(123, 107, 153, 0.2);
+    z-index: 2; /* 提高小球的层级 */
+}
+
+.timeline-item[data-user="孙佳乐"]::after {
+    content: '';
+    position: absolute;
+    right: -12px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    background: var(--secondary);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 5px rgba(224, 165, 188, 0.2);
+    z-index: 2; /* 提高小球的层级 */
+}
+
+/* 小球悬停效果 */
+.timeline-item:hover::after {
+    transform: scale(1.2);
+    box-shadow: 0 4px 10px rgba(74, 59, 99, 0.3);
+}
+
+/* 优化心情显示样式 */
+.timeline-mood {
+    display: none;
+}
+
+.timeline-mood[data-mood] {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    margin-bottom: 8px; /* 调整为下边距 */
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--primary-light);
+    border-radius: 10px;
+    font-size: calc(var(--small-font-size) * 0.95) !important;
+    color: var(--text);
+    box-shadow: 0 2px 6px rgba(123, 107, 153, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* 为不同心情设置不同的边框颜色 */
+.timeline-mood[data-mood="happy"] {
+    border-color: #FFD93D;
+    background: rgba(255, 217, 61, 0.1);
+}
+
+.timeline-mood[data-mood="sad"] {
+    border-color: #98B7DB;
+    background: rgba(152, 183, 219, 0.1);
+}
+
+.timeline-mood[data-mood="excited"] {
+    border-color: #FF8FB1;
+    background: rgba(255, 143, 177, 0.1);
+}
+
+.timeline-mood[data-mood="angry"] {
+    border-color: #FF6B6B;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.timeline-mood[data-mood="love"] {
+    border-color: #FF90BC;
+    background: rgba(255, 144, 188, 0.1);
+}
+
+/* 悬停效果 */
+.timeline-mood:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(123, 107, 153, 0.15);
+}
+
+/* 确保表情符号大小合适 */
+.timeline-mood span:first-child {
+    font-size: 1.2em;
+    margin-right: 6px;
+}
+
+/* 修改回复区域样式 */
+.reply-section {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important; /* 完全移除边框 */
+    background: transparent !important; /* 确保背景透明 */
+}
+
+.replies {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background: transparent !important; /* 移除背景色 */
+}
+
+.reply-item {
+    width: 100% !important;
+    margin: 8px 0 !important; /* 只保留上下间距 */
+    padding: 12px !important;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(74, 59, 99, 0.1);
+}
+
+/* 完全移除嵌套回复的缩进和边框 */
+.nested-replies {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    border-left: none !important;
+}
+
+.nested-reply {
+    width: 100% !important;
+    margin: 8px 0 !important; /* 只保留上下间距 */
+    padding: 12px !important;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+/* 移除所有可能的左侧缩进 */
+.replies .nested-replies,
+.nested-replies .nested-replies {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-left: none !important;
+}
+
+/* 图片预览模态框样式 */
+.image-preview-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.preview-modal-content {
+    max-width: 90%;
+    max-height: 90vh;
+    margin: auto;
+    display: block;
+    object-fit: contain;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.close-modal {
+    position: absolute;
+    right: 35px;
+    top: 15px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.close-modal:hover {
+    color: #bbb;
+}
+
+/* 文件上传按钮样式 */
+.form-group input[type="file"] {
+    display: none;  /* 隐藏原始文件输入框 */
+}
+
+.form-group label[for="image"] {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    background: var(--white);
+    border: 2px solid rgba(123, 107, 153, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.form-group label[for="image"]:hover {
+    border-color: var(--primary-light);
+    background: rgba(155, 139, 185, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+/* 日期分隔符样式 */
+.date-divider {
+    /* 移除 sticky 定位 */
+    position: relative;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 0;
+    margin: 10px 0;
+    text-align: center;
+    z-index: 1;
+}
+
+/* 调整日期文字容器的样式 */
+.date-divider span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 6px 15px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    color: var(--text-light);
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+/* 年月日分隔样式 */
+.date-divider span .year {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.date-divider span .month {
+    color: var(--primary-light);
+    font-weight: 600;
+}
+
+.date-divider span .day {
+    color: var(--text-light);
+}
+
+/* 调整内容容器的样式 */
+.timeline-content {
+    padding-top: 10px;
+}
+
+/* 确保第一个日期分隔符不会有上方空白 */
+.timeline-content .date-divider:first-child {
+    margin-top: 0;
+    padding-top: 15px;
+}
+
+/* 调整时间线项目的上边距，避免与日期重叠 */
+.timeline-item {
+    margin-top: 20px !important;
+}
+
+/* 加载更多按钮样式修复 */
+.load-more-btn {
+    position: relative;
+    margin: 20px auto;
+    z-index: 3;
+    display: block;
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.load-more-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.3);
+}
+
+/* 平板设备的响应式设计 */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        width: 90% !important;
+    }
+
+    .title-wrapper,
+    .post-form-card,
+    .timeline-wrapper,
+    .filter-section {
+        width: 90% !important;
+        margin: 0 auto 20px auto !important;
+    }
+    
+    .timeline-item[data-user="晁森豪"],
+    .timeline-item[data-user="孙佳乐"] {
+        width: 70% !important;
+    }
+}
+
+/* 筛选组样式 */
+.filter-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px;
+}
+
+/* 筛选控件基础样式 */
+.filter-group select,
+.filter-group input[type="date"] {
+    padding: 8px 15px;
+    border: 2px solid var(--primary-light);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text);
+    font-size: var(--base-font-size);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+    width: 130px; /* 固定宽度 */
+}
+
+/* 筛选标签组 */
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 标签样式 */
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-light);
+    font-size: var(--small-font-size);
+    white-space: nowrap;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .filter-group {
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding: 10px 5px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+    
+    /* 隐藏滚动条但保持功能 */
+    .filter-group::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-group select,
+    .filter-group input[type="date"] {
+        width: 120px;
+        font-size: var(--small-font-size);
+        padding: 6px 12px;
+    }
+}
+
+/* 日期选择器特殊样式 */
+.filter-group input[type="date"] {
+    padding-right: 10px;
+}
+
+/* 筛选控件悬停效果 */
+.filter-group select:hover,
+.filter-group input[type="date"]:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(74, 59, 99, 0.1);
+}
+
+/* 筛选控件焦点效果 */
+.filter-group select:focus,
+.filter-group input[type="date"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(123, 107, 153, 0.15);
+}
+
+/* 下拉箭头样式 */
+.filter-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237B6B99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 15px;
+    padding-right: 35px;
+}
+
+/* 选项样式 */
+.filter-group select option {
+    background: white;
+    color: var(--text);
+    padding: 10px;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .filter-group {
+        gap: 10px;
+        padding: 5px;
+    }
+
+    .filter-group select,
+    .filter-group input[type="date"] {
+        font-size: var(--small-font-size);
+        padding: 6px 12px;
+        min-width: 100px;
+    }
+}
+
+/* 添加标签样式 */
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-light);
+    font-size: var(--small-font-size);
+}
+
+.filter-label i {
+    font-size: 14px;
+}
+
+/* 回复区域样式 */
+.reply-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(123, 107, 153, 0.1);
+    width: 100%;
+    position: relative;
+}
+
+.reply-toggle-btn {
+    margin-top: 8px;
+    background: none;
+    border: none;
+    color: var(--text-light);
+    padding: 4px 8px;
+    font-size: var(--small-font-size);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reply-toggle-btn:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.reply-form {
+    display: none;
+    margin: 10px 0;
+}
+
+.reply-input {
+    width: 100%;
+    min-height: 40px; /* 从 60px 改为 40px */
+    max-height: 120px; /* 添加最大高度限制 */
+    padding: 8px; /* 稍微减小内边距 */
+    border: 1px solid rgba(123, 107, 153, 0.1);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    resize: vertical;
+    font-size: 0.9em;
+    font-family: inherit;
+}
+
+.reply-submit-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: var(--base-font-size);
+}
+
+.reply-submit-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.2);
+}
+
+.replies {
+    margin-top: 10px;
+    width: 100%;
+    display: block;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.reply-item {
+    width: 95% !important; /* 相对于父容器的宽度 */
+    margin: 10px auto !important;
+    padding: 12px !important;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(74, 59, 99, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(123, 107, 153, 0.1);
+}
+
+.reply-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 59, 99, 0.2);
+    border-color: rgba(123, 107, 153, 0.2);
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: var(--text-light);
+    font-size: 0.9em;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(123, 107, 153, 0.1);
+}
+
+.reply-content {
+    font-weight: normal; /* 回复内容不加粗 */
+    color: var(--text);
+    line-height: 1.4;
+    font-size: var(--base-font-size);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.filter-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(74, 59, 99, 0.3);
+}
+
+.filter-section:hover::before {
+    top: -15px;
+    left: -15px;
+    right: -15px;
+    bottom: -15px;
+    box-shadow: 0 15px 40px rgba(74, 59, 99, 0.3);
+}
+
+/* 回复加载状态样式 */
+.reply-loading {
+    display: none;
+    text-align: center;
+    padding: 10px;
+    color: var(--text-light);
+    font-size: 0.9em;
+}
+
+.reply-loading.active {
+    display: block;
+}
+
+/* 回复错误消息样式 */
+.reply-error {
+    color: #f44336;
+    text-align: center;
+    padding: 10px;
+    font-size: 0.9em;
+    display: none;
+}
+
+.reply-error.active {
+    display: block;
+}
+
+/* 回复为空时的提示样式 */
+.no-replies {
+    text-align: center;
+    padding: 15px;
+    color: var(--text-light);
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+/* 回复区域的展开/折叠动画 */
+.replies-wrapper {
+    max-height: none;
+    overflow: visible;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(123, 107, 153, 0.1);
+}
+
+.replies-wrapper.active {
+    max-height: none;
+}
+
+/* 回复按钮图标动画 */
+.reply-toggle-btn i {
+    transition: transform 0.3s ease;
+}
+
+.reply-toggle-btn.active i {
+    transform: rotate(180deg);
+}
+
+/* 回复表单提交按钮禁用状态 */
+.reply-submit-btn:disabled {
+    background: var(--text-light);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* 回复加载动画 */
+.reply-loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--primary-light);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+    display: none;
+}
+
+.reply-loading-spinner.active {
+    display: block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 确保回复区域在移动端也能正确显示 */
+@media screen and (max-width: 768px) {
+    .reply-section {
+        padding: 10px;
+    }
+    
+    .reply-form {
+        padding: 10px;
+    }
+    
+    .reply-input {
+        min-height: 50px;
+    }
+    
+    .reply-item {
+        padding: 10px;
+    }
+    
+    .reply-header {
+        font-size: 0.85em;
+    }
+    
+    .reply-content {
+        font-size: 0.9em;
+    }
+}
+
+/* 回复操作区域样式 */
+.reply-actions {
+    display: flex;
+    justify-content: flex-end; /* 靠右对齐 */
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px; /* 增加与内容的间距 */
+}
+
+.reply-delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 2px 4px !important;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    font-size: 0.8em !important;
+}
+
+.reply-delete-btn:hover {
+    color: #ff4444;
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* 首次发布的消息内容加粗 */
+.timeline-item .content {
+    font-weight: 600; /* 首次发布的消息加粗 */
+    line-height: 1.6;
+    margin: 10px 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.nested-reply {
+    width: 95% !important;
+    margin: 10px auto !important;
+    padding: 12px !important;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+.nested-replies {
+    margin: 10px 0 10px 25px;
+    padding-left: 15px;
+    border-left: 2px solid var(--primary-light);
+}
+
+/* 嵌套回复的输入框样式 */
+.nested-reply-form {
+    margin: 10px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+.nested-reply-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(123, 107, 153, 0.2);
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 60px;
+    margin-bottom: 10px;
+    font-family: inherit;
+}
+
+.nested-reply-submit-btn {
+    padding: 8px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.nested-reply-submit-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.2);
+}
+
+/* 嵌套回复的内容样式 */
+.nested-reply .reply-content {
+    font-size: 0.95em;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.nested-reply .reply-header {
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(123, 107, 153, 0.1);
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .nested-reply {
+        margin-left: 10px;
+        padding: 12px;
+    }
+
+    .nested-replies {
+        margin-left: 15px;
+        padding-left: 10px;
+    }
+}
+
+/* 修改嵌套回复的样式 */
+.nested-replies {
+    margin-top: 10px;
+    margin-left: 15px; /* 减小左边距 */
+    padding-left: 15px;
+    border-left: 2px solid rgba(123, 107, 153, 0.1); /* 降低边框透明度 */
+}
+
+.nested-reply {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+    /* 移除左侧边框 */
+    border-left: none;
+}
+
+/* 修改第一层嵌套回复的样式 */
+.replies .nested-replies {
+    border-left: 2px solid var(--primary-light); /* 只保留第一层的边框 */
+}
+
+/* 移除更深层级的边框 */
+.nested-replies .nested-replies {
+    border-left: none;
+    margin-left: 10px; /* 减小深层嵌套的缩进 */
+}
+
+/* 优化移动端显示 */
+@media screen and (max-width: 768px) {
+    .nested-replies {
+        margin-left: 10px;
+        padding-left: 10px;
+    }
+    
+    .nested-replies .nested-replies {
+        margin-left: 5px;
+    }
+}
+
+/* 修改嵌套回复按钮的样式 */
+.nested-reply-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 4px 8px !important; /* 从 8px 15px 减小到 4px 8px */
+    border-radius: 4px !important; /* 从 8px 减小到 4px */
+    cursor: pointer;
+    font-size: 0.8em !important; /* 减小字体大小 */
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px; /* 从 5px 减小到 3px */
+    height: 24px !important; /* 添加固定高度 */
+    line-height: 24px !important;
+}
+
+.nested-reply-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.2);
+}
+
+.nested-reply-cancel-btn {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 4px 8px !important; /* 从 8px 15px 减小到 4px 8px */
+    border-radius: 4px !important; /* 从 8px 减小到 4px */
+    cursor: pointer;
+    font-size: 0.8em !important; /* 减小字体大小 */
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px; /* 从 5px 减小到 3px */
+    height: 24px !important; /* 添加固定高度 */
+    line-height: 24px !important;
+    margin-left: 5px;
+}
+
+.nested-reply-cancel-btn:hover {
+    background: var(--secondary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(224, 165, 188, 0.2);
+}
+
+/* 嵌套回复的表单样式 */
+.nested-reply-form {
+    margin: 10px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+.nested-reply-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(123, 107, 153, 0.2);
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 60px;
+    margin-bottom: 10px;
+    font-family: inherit;
+}
+
+.nested-reply-submit-btn {
+    padding: 8px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.nested-reply-submit-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.2);
+}
+
+/* 回复区域的整体样式 */
+.reply-section {
+    margin-top: 15px;
+    border-top: 1px solid rgba(123, 107, 153, 0.1);
+    padding-top: 15px;
+}
+
+.replies {
+    margin-top: 15px;
+    display: block;
+}
+
+.reply-item {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(74, 59, 99, 0.1);
+}
+
+/* 修改回复区域样式 */
+.replies {
+    margin-top: 15px;
+    display: block !important; /* 确保始终显示 */
+    opacity: 1 !important;
+}
+
+.reply-section {
+    margin-top: 15px;
+    border-top: 1px solid rgba(123, 107, 153, 0.1);
+    padding-top: 15px;
+    display: block !important;
+}
+
+/* 统一回复按钮样式 */
+.reply-toggle-btn,
+.nested-reply-btn,
+.reply-submit-btn,
+.nested-reply-submit-btn,
+.nested-reply-submit,
+.nested-reply-cancel,
+.nested-reply-actions button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 4px 8px !important; /* 从 8px 15px 减小到 4px 8px */
+    border-radius: 4px !important; /* 从 8px 减小到 4px */
+    cursor: pointer;
+    font-size: 0.8em !important; /* 减小字体大小 */
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px; /* 从 5px 减小到 3px */
+    height: 24px !important; /* 添加固定高度 */
+    line-height: 24px !important;
+}
+
+/* 统一所有回复按钮的悬停效果 */
+.reply-toggle-btn:hover,
+.nested-reply-btn:hover,
+.reply-submit-btn:hover,
+.nested-reply-submit-btn:hover,
+.nested-reply-submit:hover,
+.nested-reply-cancel:hover,
+.nested-reply-actions button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 107, 153, 0.2);
+}
+
+/* 优化嵌套回复表单中的按钮布局 */
+.nested-reply-actions {
+    display: flex;
+    gap: 5px; /* 从 10px 减小到 5px */
+    margin-top: 5px;
+}
+
+/* 修复发布记录的动画效果 */
+.timeline-item {
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    animation: scaleIn 0.3s ease;
+    width: calc(60% - 20px);
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
+}
+
+.timeline-item[data-user="晁森豪"]:hover {
+    background: rgba(123, 107, 153, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(123, 107, 153, 0.2);
+}
+
+.timeline-item[data-user="孙佳乐"]:hover {
+    background: rgba(224, 165, 188, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(224, 165, 188, 0.2);
+}
+
+/* 确保动画效果正常工作 */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 强制控制文字大小 */
+.main-title { font-size: calc(var(--base-font-size) * 1.5) !important; }
+.subtitle { font-size: var(--base-font-size) !important; }
+.timeline-text { font-size: var(--base-font-size) !important; }
+.timeline-user,
+.timeline-date { font-size: calc(var(--base-font-size) * 0.8) !important; /* 统一使用0.8倍 */ }
+
+@media screen and (max-width: 768px) {
+    .main-title { font-size: calc(var(--base-font-size) * 1.3) !important; }
+    .subtitle { font-size: var(--small-font-size) !important; }
+    .timeline-text { font-size: var(--small-font-size) !important; }
+    .timeline-user,
+    .timeline-date { font-size: calc(var(--base-font-size) * 0.8) !important; /* 保持移动端也是0.8倍 */ }
+}
+
+/* 强制控制内边距和外边距 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 强制控制间距 */
+.title-wrapper,
+.post-form-card,
+.filter-section,
+.timeline-item {
+    margin-bottom: 30px !important; /* 从 15px 增加到 30px */
+    padding: 15px !important;
+}
+
+/* 强制控制按钮大小 */
+.submit-btn,
+.reply-submit-btn,
+.nested-reply-submit-btn {
+    height: 40px !important;
+    line-height: 40px !important;
+    padding: 0 20px !important;
+}
+
+/* 平板设备适配 */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        width: min(90%, 600px) !important;
+    }
+
+    .timeline-item[data-user="晁森豪"],
+    .timeline-item[data-user="孙佳乐"] {
+        width: 95% !important;
+    }
+}
+
+/* 大屏幕适配 */
+@media screen and (min-width: 1025px) {
+    .container {
+        width: 600px !important;
+    }
+
+    .title-wrapper,
+    .post-form-card,
+    .filter-section,
+    .module-wrapper {
+        width: 100% !important; /* 从 85% 改为 100% */
+    }
+
+    .timeline-item[data-user="晁森豪"],
+    .timeline-item[data-user="孙佳乐"] {
+        width: 100% !important; /* 从 80% 改为 100% */
+    }
+}
+
+/* 修改回复区域样式，完全移除左右边距 */
+.reply-section {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    border-top: 1px solid rgba(123, 107, 153, 0.1);
+}
+
+/* 调整嵌套回复的大小和比例 */
+.nested-reply {
+    width: 90% !important; /* 减小宽度 */
+    margin: 8px auto !important;
+    padding: 8px !important; /* 减小内边距 */
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+/* 调整嵌套回复的输入框 */
+.nested-reply-form {
+    width: 90% !important;
+    margin: 8px auto !important;
+    padding: 8px !important;
+}
+
+.nested-reply-input {
+    width: 100%;
+    min-height: 40px; /* 减小输入框高度 */
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+/* 完全移除所有嵌套和缩进 */
+.replies,
+.nested-replies,
+.reply-item,
+.nested-reply-form-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* 移除所有可能的边框和缩进 */
+.replies .nested-replies,
+.nested-replies .nested-replies {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+/* 嵌套回复中的用户名和时间样式调整 */
+.nested-reply .reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(123, 107, 153, 0.1);
+}
+
+.nested-reply .reply-user,
+.nested-reply .reply-time {
+    font-size: calc(var(--smaller-font-size) * 1.1) !important; /* 比发布记录框的字体更小 */
+    color: var(--text-light);
+    font-weight: normal;
+}
+
+/* 嵌套回复的内容文字 */
+.nested-reply .reply-content {
+    font-size: var(--small-font-size) !important; /* 内容文字也相应减小 */
+    line-height: 1.4;
+    color: var(--text);
+    font-weight: normal;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .nested-reply .reply-user,
+    .nested-reply .reply-time {
+        font-size: var(--smaller-font-size) !important;
+    }
+    
+    .nested-reply .reply-content {
+        font-size: calc(var(--smaller-font-size) * 1.1) !important;
+    }
+}
+
+/* 统一一级和二级回复的字体大小 */
+.reply-item .reply-user,
+.reply-item .reply-time,
+.nested-reply .reply-user,
+.nested-reply .reply-time {
+    font-size: calc(var(--smaller-font-size) * 1.1) !important;
+    color: var(--text-light);
+    font-weight: normal;
+}
+
+.reply-item .reply-content,
+.nested-reply .reply-content {
+    font-size: var(--small-font-size) !important;
+    line-height: 1.4;
+    color: var(--text);
+    font-weight: normal;
+}
+
+/* 修复发布记录模块内框遮挡问题 */
+.timeline-outer-wrapper {
+    position: relative;
+    margin-top: 20px;
+    padding: 20px;
+    background: transparent; /* 改为透明背景 */
+    border-radius: 20px;
+    z-index: 0;
+}
+
+.timeline-outer-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0; /* 移除上边距 */
+    left: 0; /* 移除左边距 */
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 20px;
+    z-index: -1;
+    box-shadow: 0 15px 45px rgba(74, 59, 99, 0.2);
+}
+
+/* 调整发布记录框和小球的层级 */
+.timeline-item {
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-item[data-user="晁森豪"]::after,
+.timeline-item[data-user="孙佳乐"]::after {
+    z-index: 3;
+}
+
+/* 统一一级和二级回复的用户名和时间样式 */
+.reply-item .reply-header,
+.nested-reply .reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(123, 107, 153, 0.1);
+}
+
+.reply-item .reply-user,
+.nested-reply .reply-user {
+    font-size: calc(var(--smaller-font-size) * 1.1) !important;
+    color: var(--text-light);
+    font-weight: normal;
+    background: rgba(123, 107, 153, 0.08);
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.reply-item .reply-time,
+.nested-reply .reply-time {
+    font-size: calc(var(--smaller-font-size) * 1.1) !important;
+    color: var(--text-light);
+    font-weight: normal;
+    background: rgba(123, 107, 153, 0.05);
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* 悬停效果 */
+.reply-item .reply-user:hover,
+.nested-reply .reply-user:hover,
+.reply-item .reply-time:hover,
+.nested-reply .reply-time:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* 统一所有按钮的基础样式 */
+.reply-toggle-btn,
+.nested-reply-btn,
+.reply-submit-btn,
+.nested-reply-submit-btn,
+.nested-reply-submit,
+.nested-reply-cancel,
+.nested-reply-actions button,
+.voice-btn {  /* 添加语音按钮 */
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    cursor: pointer;
+    font-size: 0.8em !important;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px !important;
+    line-height: 24px !important;
+}
+
+/* 语音按钮特殊样式 */
+.voice-btn {
+    background: var(--primary-light) !important;
+    margin-top: 8px !important;
+    width: fit-content !important;
+}
+
+/* 取消按钮特殊样式 */
+.nested-reply-cancel {
+    background: var(--secondary) !important;
+}
+
+/* 统一按钮悬停效果 */
+.reply-toggle-btn:hover,
+.nested-reply-btn:hover,
+.reply-submit-btn:hover,
+.nested-reply-submit-btn:hover,
+.nested-reply-submit:hover,
+.nested-reply-cancel:hover,
+.nested-reply-actions button:hover,
+.voice-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(123, 107, 153, 0.1);
+}
+
+/* 语音控制区域样式调整 */
+.voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.voice-timer {
+    font-size: var(--small-font-size);
+    color: var(--text-light);
+}
+
+/* 内容容器 */
+.timeline-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* 筛选栏样式调整 */
+.filter-section select,
+.filter-section input[type="date"] {
+    font-size: var(--small-font-size) !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    height: 32px !important;
+    min-width: 100px !important;
+    max-width: 130px !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .filter-section select,
+    .filter-section input[type="date"] {
+        font-size: var(--smaller-font-size) !important;
+        padding: 4px 8px !important;
+        height: 28px !important;
+        min-width: 80px !important;
+        max-width: 110px !important;
+    }
+
+    .filter-group {
+        gap: 8px;
+    }
+}
+
+/* 日期选择器样式优化 */
+.filter-section input[type="date"] {
+    /* 保持现有样式 */
+    font-size: var(--small-font-size) !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    height: 32px !important;
+    min-width: 100px !important;
+    max-width: 130px !important;
+    
+    /* 添加这些样式来修复移动端显示 */
+    position: relative;
+    color: var(--text);
+    
+    /* 添加默认显示文本 */
+    &::-webkit-datetime-edit-text,
+    &::-webkit-datetime-edit-month-field,
+    &::-webkit-datetime-edit-day-field,
+    &::-webkit-datetime-edit-year-field {
+        color: var(--text);
+    }
+    
+    /* 未选择时的占位符颜色 */
+    &:invalid {
+        color: var(--text-light);
+    }
+}
+
+/* 修复日期选择器的占位符显示 */
+.filter-section input[type="date"]::-webkit-datetime-edit-text,
+.filter-section input[type="date"]::-webkit-datetime-edit-month-field,
+.filter-section input[type="date"]::-webkit-datetime-edit-day-field,
+.filter-section input[type="date"]::-webkit-datetime-edit-year-field {
+    color: var(--text);
+}
+
+/* 未选择时显示占位符 */
+.filter-section input[type="date"]:not(:valid):before {
+    content: attr(placeholder);
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+}
+
+/* 选择后隐藏占位符 */
+.filter-section input[type="date"]:valid:before {
+    display: none;
+}
+
+/* 移动端特别适配 */
+@media screen and (max-width: 768px) {
+    .filter-section input[type="date"] {
+        font-size: var(--smaller-font-size) !important;
+        padding: 4px 8px !important;
+        height: 28px !important;
+    }
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .main-title {
+        font-size: calc(var(--base-font-size) * 1.44) !important; /* 从 1.2 增加到 1.44 */
+    }
+}
+
+/* 标题模块样式 */
+.module-wrapper .main-title,
+.module-wrapper .subtitle {
+    text-align: center;
+    width: 100%;
+}
+
+/* 如果还不居中，可以给标题模块添加特殊样式 */
+.module-container:first-child .module-wrapper {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 标题文字样式 */
+.main-title {
+    color: var(--primary);
+    margin: 0;
+    font-size: calc(var(--base-font-size) * 1.8) !important;
+    font-weight: 700;
+    text-align: center;
+}
+
+.subtitle {
+    color: var(--text-light);
+    margin: 8px 0 0;
+    font-size: var(--base-font-size) !important;
+    text-align: center;
+}
+
+/* 增加选择器优先级 */
+.container .module-container:first-child .module-wrapper {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.container .module-wrapper .main-title {
+    text-align: center !important;
+    width: 100% !important;
+    color: var(--primary) !important;
+    margin: 0 !important;
+    font-size: calc(var(--base-font-size) * 1.8) !important;
+    font-weight: 700 !important;
+}
+
+.container .module-wrapper .subtitle {
+    text-align: center !important;
+    width: 100% !important;
+    color: var(--text-light) !important;
+    margin: 8px 0 0 !important;
+    font-size: var(--base-font-size) !important;
+}
+
+/* 图片容器样式 */
+.image-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.timeline-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.timeline-image:hover {
+    transform: scale(1.05);
+}
+
+/* 图片预览模态框样式 */
+.image-preview-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.preview-modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90vh;
+    object-fit: contain;
+}
+
+.close-modal {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: #fff;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+/* 加载提示样式 */
+.loading-more {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-light);
+    font-size: var(--base-font-size);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    margin: 20px auto;
+    width: 85%;
+    max-width: 510px;
+    box-shadow: 0 5px 15px rgba(74, 59, 99, 0.1);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 删除按钮样式 */
+.delete-post-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    padding: 0 0 0 8px;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+}
+
+.delete-post-btn:hover {
+    opacity: 1;
+    color: #ff4444;
+}
+
+/* 删除按钮和时间的分隔线 */
+.timeline-date .separator {
+    width: 1px;
+    height: 14px;
+    background-color: var(--text-light);
+    opacity: 0.3;
+    margin: 0 4px;
+}
+
+/* 回复样式 */
+.reply {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    border-left: 3px solid var(--primary-light);
+}
+
+/* 嵌套回复容器 */
+.nested-replies {
+    margin-left: 20px;
+    padding-left: 15px;
+    border-left: 2px solid var(--primary-light);
+}
+
+/* 二级嵌套回复 */
+.nested-reply {
+    margin: 8px 0;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    border-left: 2px solid var(--secondary-light);
+}
+
+/* 三级嵌套回复容器 */
+.nested-replies-level-3 {
+    margin-left: 15px;
+    padding-left: 12px;
+    border-left: 1px solid var(--secondary);
+}
+
+/* 三级嵌套回复 */
+.nested-reply-level-3 {
+    margin: 6px 0;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    border-left: 2px solid var(--secondary);
+}
+
+/* 回复表单样式 */
+.nested-reply-form {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+}
+
+/* 基础回复样式 */
+.reply {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    border-left: 3px solid var(--primary-light);
+}
+
+/* 嵌套回复容器 */
+.nested-replies {
+    margin-left: 20px;
+    padding-left: 15px;
+    border-left: 2px solid var(--primary-light);
+}
+
+/* 嵌套回复基础样式 */
+.nested-reply {
+    margin: 8px 0;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    border-left: 2px solid var(--secondary-light);
+}
+
+/* 不同层级的样式 */
+.nested-reply.level-1 {
+    background: rgba(255, 255, 255, 0.7);
+    border-left-color: var(--primary-light);
+}
+
+.nested-reply.level-2 {
+    background: rgba(255, 255, 255, 0.65);
+    border-left-color: var(--secondary);
+}
+
+.nested-reply.level-3 {
+    background: rgba(255, 255, 255, 0.6);
+    border-left-color: var(--secondary-light);
+}
+
+/* 更深层级的统一样式 */
+.nested-reply.level-4,
+.nested-reply.level-5,
+.nested-reply.level-n {
+    background: rgba(255, 255, 255, 0.55);
+    border-left-color: var(--text-light);
+}
+
+/* 回复表单样式 */
+.nested-reply-form {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+}
+
+/* 删除按钮统一样式 */
+.delete-post-btn,
+.delete-reply-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    padding: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    font-size: var(--small-font-size);
+}
+
+.delete-post-btn:hover,
+.delete-reply-btn:hover {
+    color: #ff6b6b;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.delete-post-btn i,
+.delete-reply-btn i {
+    margin-right: 0;
+}
+
+/* 回复按钮样式 */
+.nested-reply-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    padding: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+    font-size: var(--small-font-size);
+}
+
+.nested-reply-btn:hover {
+    color: var(--primary);
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.nested-reply-btn i {
+    margin-right: 4px;
+}
+
+/* 回复头部样式优化 */
+.reply-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.reply-user {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.reply-time {
+    color: var(--text-light);
+    font-size: var(--small-font-size);
+}
+
+/* 身份选择弹窗样式 */
+.welcome-modal {
+    text-align: center;
+    padding: 30px !important;
+}
+
+.welcome-modal h2 {
+    color: var(--text);
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.welcome-modal p {
+    color: var(--text-light);
+    margin-bottom: 25px;
+}
+
+.user-select-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.user-select-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border: 2px solid var(--primary-light);
+    background: white;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.user-select-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary);
+}
+
+.user-select-btn .emoji {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.user-select-btn span:not(.emoji) {
+    color: var(--text);
+    font-size: 1.1em;
+}
+
+/* 确保弹窗显示在最上层 */
+#userSelectModal {
+    display: block;
+    background: rgba(255, 255, 255, 0.95);
+    z-index: 1000;
+}
+
+/* 修改弹窗样式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    z-index: 1000;
+}
+
+.welcome-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(74, 59, 99, 0.15);
+    width: 90%;
+    max-width: 400px;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    /* 调整时间线项目的宽度和边距 */
+    .timeline-item {
+        width: 90% !important;
+        margin: 0 auto 20px;
+        padding: 15px !important;
+        transform: scale(1.5); /* 从0.8改为1.5倍 */
+        transform-origin: top center; /* 从顶部中心开始缩放 */
+    }
+
+    /* 调整字体大小 */
+    .timeline-text {
+        font-size: calc(var(--base-font-size) * 0.85) !important;
+    }
+
+    .timeline-user,
+    .timeline-date {
+        font-size: calc(var(--base-font-size) * 0.8) !important;
+    }
+
+    .timeline-mood[data-mood] {
+        font-size: calc(var(--small-font-size) * 0.7) !important;
+    }
+
+    /* 补偿缩放导致的间距 */
+    .module-container {
+        margin-bottom: calc(40px * 1.5) !important; /* 调整间距以适应新的缩放比例 */
+    }
+
+    /* 确保悬停效果正常工作 */
+    .timeline-item:hover {
+        transform: scale(1.5) translateY(-5px); /* 更新悬停效果的缩放比例 */
+    }
+
+    /* 调整容器宽度以适应更大的缩放 */
+    .container {
+        max-width: 100% !important;
+        padding: 10px !important;
+    }
+
+    /* 调整模块容器的间距 */
+    .module-container {
+        margin-bottom: 60px !important;
+    }
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    /* 调整容器宽度 */
+    .container {
+        width: 100% !important;
+        padding: 10px !important;
+    }
+
+    /* 调整发布记录框 */
+    .timeline-item {
+        width: 95% !important;
+        margin: 15px auto !important;
+        padding: 15px !important;
+        transform: none !important; /* 移除所有缩放效果 */
+    }
+
+    /* 调整模块间距 */
+    .module-container {
+        margin-bottom: 20px !important;
+    }
+
+    /* 调整字体大小 */
+    .timeline-text,
+    .timeline-user,
+    .timeline-date {
+        font-size: calc(var(--base-font-size) * 0.8) !important;
+    }
+}
+
+/* 筛选模块字体大小 */
+.filter-group select,
+.filter-group input[type="date"],
+.filter-label {
+    font-size: calc(var(--base-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+}
+
+/* 时间线模块字体大小 */
+.timeline-user,
+.timeline-date,
+.timeline-text {
+    font-size: calc(var(--base-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+}
+
+.timeline-mood[data-mood] {
+    font-size: calc(var(--small-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+}
+
+/* 移动端适配下的字体大小 */
+@media screen and (max-width: 768px) {
+    .timeline-text,
+    .timeline-user,
+    .timeline-date {
+        font-size: calc(var(--base-font-size) * 0.64) !important; /* 0.8 * 0.8 = 0.64 */
+    }
+}
+
+/* 嵌套回复的字体大小调整 */
+.nested-reply .reply-user,
+.nested-reply .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.6) !important;
+}
+
+.nested-reply .reply-content {
+    font-size: calc(var(--small-font-size) * 0.6) !important;
+}
+
+.nested-reply-btn,
+.nested-reply-submit-btn,
+.nested-reply-input {
+    font-size: calc(var(--small-font-size) * 0.6) !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .nested-reply .reply-user,
+    .nested-reply .reply-time,
+    .nested-reply .reply-content,
+    .nested-reply-btn,
+    .nested-reply-submit-btn,
+    .nested-reply-input {
+        font-size: calc(var(--small-font-size) * 0.6) !important;
+    }
+}
+
+/* 回复框和按钮的基础样式 */
+.reply-toggle-btn,
+.reply-submit-btn {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.8改为0.6 */
+}
+
+.reply-input {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.8改为0.6 */
+}
+
+/* 一级回复样式 */
+.nested-reply.level-1 .reply-content {
+    font-size: calc(var(--small-font-size) * 0.55) !important; /* 从0.75改为0.55 */
+}
+
+.nested-reply.level-1 .reply-user,
+.nested-reply.level-1 .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.55) !important; /* 从0.75改为0.55 */
+}
+
+/* 二级回复样式 */
+.nested-reply.level-2 .reply-content {
+    font-size: calc(var(--small-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+}
+
+.nested-reply.level-2 .reply-user,
+.nested-reply.level-2 .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+}
+
+/* 三级及以上回复样式 */
+.nested-reply.level-3 .reply-content,
+.nested-reply.level-n .reply-content {
+    font-size: calc(var(--small-font-size) * 0.45) !important; /* 从0.65改为0.45 */
+}
+
+.nested-reply.level-3 .reply-user,
+.nested-reply.level-3 .reply-time,
+.nested-reply.level-n .reply-user,
+.nested-reply.level-n .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.45) !important; /* 从0.65改为0.45 */
+}
+
+/* 回复按钮样式统一调整 */
+.nested-reply-btn,
+.nested-reply-submit-btn,
+.nested-reply-cancel-btn {
+    font-size: calc(var(--small-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+    padding: 4px 8px !important;
+}
+
+/* 回复输入框样式 */
+.nested-reply-input {
+    font-size: calc(var(--small-font-size) * 0.5) !important; /* 从0.7改为0.5 */
+    padding: 6px 10px !important;
+}
+
+/* 第一级回复的样式 */
+.reply-content {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.45改为0.6 */
+}
+
+.reply-user,
+.reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.6) !important; /* 从0.45改为0.6 */
+}
+
+/* 回复按钮和输入框 */
+.reply-toggle-btn,
+.reply-submit-btn,
+.reply-input {
+    font-size: calc(var(--small-font-size) * 0.6) !important; /* 从0.45改为0.6 */
+}
+
+/* 嵌套回复样式 */
+.nested-reply .reply-content {
+    font-size: calc(var(--small-font-size) * 0.55) !important; /* 稍微小一点 */
+}
+
+.nested-reply .reply-user,
+.nested-reply .reply-time {
+    font-size: calc(var(--smaller-font-size) * 0.55) !important;
+}
+
+/* 调整音频播放器样式 */
+.voice-preview-container audio {
+    width: 90% !important;
+    height: 32px !important;
+    margin: 5px 0 !important;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .voice-preview-container audio {
+        width: 100% !important;
+        height: 28px !important;
+    }
+}
+
+/* 发布记录中的正文文字样式 */
+.timeline-content {
+    font-size: calc(var(--base-font-size) * 1.28) !important; /* 放大两倍 */
+    font-weight: bold !important;
+    line-height: 1.5;
+    margin: 10px 0;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .timeline-content {
+        font-size: calc(var(--base-font-size) * 1.28) !important;
+    }
+}
+
+/* 加载指示器样式 */
+.loading-indicator {
+    text-align: center;
+    padding: 15px;
+    margin: 10px 0;
+    color: var(--text-light);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    font-size: calc(var(--base-font-size) * 0.9);
+    transition: opacity 0.3s ease;
+    opacity: 1;
+}
+
+.loading-indicator.more-posts {
+    cursor: pointer;
+    background: rgba(123, 107, 153, 0.1);
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.loading-indicator.more-posts:hover {
+    background: rgba(123, 107, 153, 0.2);
+    transform: translateY(-2px);
+}
+
+/* 底部加载提示固定样式 */
+.loading-indicator.bottom-loader {
+    position: sticky;
+    bottom: 0;
+    margin-top: 20px;
+    z-index: 1;
+}
+
+/* 修改音频播放器样式 */
+.voice-preview-container {
+    width: 100%;
+    margin: 10px 0;
+    padding: 5px;
+}
+
+.voice-preview-container audio {
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* 发布记录中的正文文字样式 - 直接改帖子内容的字体大小 */
+.timeline-item .timeline-content {
+    font-size: 32px !important; /* 直接用具体的大小 */
+    font-weight: bold;
+    line-height: 1.5;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .timeline-item .timeline-content {
+        font-size: 28px !important;
+    }
+}
